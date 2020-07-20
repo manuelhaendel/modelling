@@ -43,12 +43,31 @@ exploring  global  scale questions.
 
 
 # What are the main differences of models described here, with respect to
+One-dimensional radiative-convective atmospheric models
+  processes related to the transfer of solar and infrared radiation within the atmosphere in considerable detail, and are particularly useful for
+  computing the radiative forcing associated with changes in the atmosphere’s composition
+
+One-dimensional upwelling-diffusion ocean models
+ 
+
+One-dimensional energy balance models
+  The multiple processes of north-south heat transport by the atmosphere and oceans and infrared emission to space 
+  
+Two-dimensional atmosphere and ocean models
+  more physically based computation of horizontal heat transport
+  Run separate two-dimensional ocean models for each of the Atlantic, Pacific, and Indian Ocean basins, with a connection at their southern boundaries
+  (representing the Antarctic Ocean) and interaction with a single, zonally-averaged atmosphere.
+  
+Three-dimensional atmosphere and ocean general circulation models
+  They directly simulate winds, ocean currents, and many other variables and processes characterizing the atmosphere and oceans.
+  
 a) processes,
 b) spatial discretisation and numerical solutions?
 
 
 # Which parts of the model(s) have high uncertainty?
 
-Establishing the link
-between  aerosol  emissions  and  cloud  properties, however,
-involves  several  poorly  understood  steps  and  is  highly 
+Establishing the link between  aerosol  emissions  and  cloud  properties, however,involves  several  poorly  understood  steps  and  is  highly 
+
+They are highly dependent on data sets of land-cover, land use, terrain, climate and soil characteristics. The quality of the existing data sets is currently low due to 
+classification problems, data availability and poor temporal and spatial coverage
