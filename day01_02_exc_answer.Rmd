@@ -116,11 +116,13 @@ max(fr_tmax)   # 310.498K
 
 # 5. Calculate the average temperature from the minimum and maximum temperatures.
 
+```{r}
 # average temperature in Freiburg
 fr_tavg <- (fr_tmax+fr_tmin)/2
 
 # average temperature 
 tavg_array <- (tmp.array+tmin.array)/2
+```
 
 
 # 6. Aggregate the daily data to monthly values.
