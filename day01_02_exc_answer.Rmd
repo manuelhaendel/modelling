@@ -87,9 +87,9 @@ fr_tmin <- tmin.array[id_lon_fr, id_lat_fr,]
 fr_prec <- prec.array[id_lon_fr, id_lat_fr,]
 fr_dswrf <- dswrf.array[id_lon_fr, id_lat_fr,]
 
-
 #### plot the time series of precipitation and min/max temperature
 library(tidyverse)
+
 data.frame(time, fr_tmax) %>% 
   ggplot(aes(time, fr_tmax)) + geom_line() +
   xlab("time (day)") + ylab("maximum temperature (K)") +
@@ -108,6 +108,9 @@ data.frame(time, fr_prec) %>%
   labs(title="Precipitation in Freiburg in 2000") +
   theme(plot.title = element_text(hjust = 0.5))
  
+#### maximum temperature in Freiburg in 2000
+
+max(fr_tmax)   # 310.498K
 
 ```
 
