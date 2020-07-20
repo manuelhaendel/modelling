@@ -104,7 +104,7 @@ data.frame(time, fr_tmin) %>%
 
 data.frame(time, fr_prec) %>%   
   ggplot(aes(time, fr_prec)) + geom_line() +
-  xlab("time (day)") + ylab("Precipitation (kg m-2 s-1)") +
+  xlab("time (day)") + ylab("precipitation (kg m-2 s-1)") +
   labs(title="Precipitation in Freiburg in 2000") +
   theme(plot.title = element_text(hjust = 0.5))
  
