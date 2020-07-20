@@ -17,7 +17,7 @@ library(ncdf4)
 prcp <- nc_open(file.path(getwd(), "day01/material/prcp_daily_2000-2000.nc"))
 tmax <- nc_open(file.path(getwd(), "day01/material/tmax_daily_2000-2000.nc"))
 tmin <- nc_open(file.path(getwd(), "day01/material/tmin_daily_2000-2000.nc"))
-#dwsrf <- ...
+#dwsrf <- nc_open(file.path(getwd(), "day01/material/dwsrf_daily_2000-2000.nc"))
 
 str(tmin)
 
@@ -78,14 +78,15 @@ freiburg <- tmp.array[id_lon_fr, id_lat_fr,]
 
 prec.array <- ncvar_get(prcp, "prcp")
 tmin.array <- ncvar_get(tmin, "tmin")
-dswrf.array <- ncvar_get(dswrf, "dswrf")
+#dswrf.array <- ncvar_get(dswrf, "dswrf")
 
 #### arrays with data for freiburg
 
 fr_tmax <- tmp.array[id_lon_fr, id_lat_fr,]
 fr_tmin <- tmin.array[id_lon_fr, id_lat_fr,]
 fr_prec <- prec.array[id_lon_fr, id_lat_fr,]
-fr_dswrf <- dswrf.array[id_lon_fr, id_lat_fr,]
+#fr_dswrf <- dswrf.array[id_lon_fr, id_lat_fr,]
+
 
 #### plot the time series of precipitation and min/max temperature
 library(tidyverse)
@@ -104,38 +105,39 @@ data.frame(t, fr_tmin) %>%
 
 data.frame(t, fr_prec) %>%   
   ggplot(aes(t, fr_prec)) + geom_line() +
-  xlab("time (day)") + ylab("precipitation (kg m-2 s-1)") +
+  xlab("time (day)") + ylab("Precipitation (kg m-2 s-1)") +
   labs(title="Precipitation in Freiburg in 2000") +
   theme(plot.title = element_text(hjust = 0.5))
  
-#### maximum temperature in Freiburg in 2000
-
-max(fr_tmax)   # 310.498K
 
 ```
+
 
 # 5. Calculate the average temperature from the minimum and maximum temperatures.
 
 ```{r}
-# average temperature in Freiburg
-fr_tavg <- (fr_tmax+fr_tmin)/2
+df <- data.frame(t, fr_tmax, fr_tmin, fr_prec)
 
-# average temperature 
-tavg_array <- (tmp.array+tmin.array)/2
+df_avg <- df %>% 
+  summarise(t_min_avg = mean(fr_tmin),
+            t_max_avg = mean(fr_tmax))
+
+print(df_avg)
+
 ```
-
 
 # 6. Aggregate the daily data to monthly values.
 Use the adequate way of aggregating for the respective variable
-(e.g. mean or sum). Create a data.frame with monthly values and a header containing Year, Month, Temp
-(temperature in degree C), Precip (precipitation in mm). Check the annual precipitation sum and look up if
-they make sense.
+(e.g. mean or sum). Create a data.frame with monthly values and a header containing Year, Month, Temp (temperature in degree C), Precip (precipitation in mm). Check the annual precipitation sum and look up if they make sense.
+
+```{r}
+
+```
+
 # 7. The data.frame contains a single year only. 
-Search for climate projections for two different RCPs and
-construct two artificial climate datasets of future scenarios covering 100 more years.
+Search for climate projections for two different RCPs and construct two artificial climate datasets of future scenarios covering 100 more years.
 # 8. Construct a further artificial climate dataset
-where of future climate scenario covering 100 more years is just
-containing repeatedly the temperature and precipitation data of the year 2000 (reference scenario).
+where of future climate scenario covering 100 more years is just containing repeatedly the temperature and precipitation data of the year 2000 (reference scenario).
 # 9. Store your datasets as tab-seperated .txt files
 using meaningful filenames, you will need them for another
 exercise.
