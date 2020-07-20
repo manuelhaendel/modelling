@@ -43,30 +43,35 @@ exploring  global  scale questions.
 
 
 # What are the main differences of models described here, with respect to
-One-dimensional radiative-convective atmospheric models
-  transfer of solar and infrared radiation within the atmosphere in considerable detail, computing the radiative forcing associated with changes in the atmosphere’s        
-  composition.
-  globally (horizontally) averaged
 
-One-dimensional upwelling-diffusion ocean models
-  Heat exchanges between atmosphere and ocean
-  global
-
-One-dimensional energy balance models
-  The multiple processes of north-south heat transport by the atmosphere and oceans and infrared emission to space 
-  
-Two-dimensional atmosphere and ocean models
-  more physically based computation of horizontal heat transport
-  Run separate two-dimensional ocean models for each of the Atlantic, Pacific, and Indian Ocean basins, with a connection at their southern boundaries
-  (representing the Antarctic Ocean) and interaction with a single, zonally-averaged atmosphere.
-  
-Three-dimensional atmosphere and ocean general circulation models
-  They directly simulate winds, ocean currents, and many other variables and processes characterizing the atmosphere and oceans. Attempt to explicitly
-  represent a large number of processes, while simpler models represent these processes by a small number of adjustable parameters.
-  
 a) processes,
-b) spatial discretisation and numerical solutions?
 
+simple models:
+Only for temperature and temperature changes, not for other
+variables such as rainfall.
+
+complex models:
+
+Simulate  the  past  and  present  geographical  variation  of
+temperature, as  well  as  other  variables  of  climatic  interest
+such as rainfall, evaporation, soil moisture, cloudiness, and
+winds
+
+b) spatial discretisation and numerical solutions?
+simple models:
+
+Generally produce zonally- or globally-averaged results. The effects of physical
+processes are approximated based on globally or zonally-averaged computations
+with low temporal resolution.
+Sufficiently fast that multiple scenarios can be simulated, and that  runs  with
+a  wide  range  of  parameter  values  can  be executed. Can be initialized in a
+steady state at little compu- tational cost.
+
+complex models:
+
+Provide credible continental scale changes. 
+Computational cost strongly limits the number of cases that can be investigated
+and the ability to initialize in a steady state.
 
 # Which parts of the model(s) have high uncertainty?
 
