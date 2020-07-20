@@ -59,7 +59,8 @@ Two-dimensional atmosphere and ocean models
   (representing the Antarctic Ocean) and interaction with a single, zonally-averaged atmosphere.
   
 Three-dimensional atmosphere and ocean general circulation models
-  They directly simulate winds, ocean currents, and many other variables and processes characterizing the atmosphere and oceans.
+  They directly simulate winds, ocean currents, and many other variables and processes characterizing the atmosphere and oceans. Attempt to explicitly
+  represent a large number of processes, while simpler models represent these processes by a small number of adjustable parameters.
   
 a) processes,
 b) spatial discretisation and numerical solutions?
