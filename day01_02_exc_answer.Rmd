@@ -90,20 +90,20 @@ fr_dswrf <- dswrf.array[id_lon_fr, id_lat_fr,]
 #### plot the time series of precipitation and min/max temperature
 library(tidyverse)
 
-data.frame(time, fr_tmax) %>% 
-  ggplot(aes(time, fr_tmax)) + geom_line() +
+data.frame(t, fr_tmax) %>% 
+  ggplot(aes(t, fr_tmax)) + geom_line() +
   xlab("time (day)") + ylab("maximum temperature (K)") +
   labs(title="Maximum air temperature in Freiburg in 2000") +
   theme(plot.title = element_text(hjust = 0.5))
 
-data.frame(time, fr_tmin) %>% 
-  ggplot(aes(time, fr_tmin)) + geom_line() +
+data.frame(t, fr_tmin) %>% 
+  ggplot(aes(t, fr_tmin)) + geom_line() +
   xlab("time (day)") + ylab("minimum temperature (K)") +
   labs(title="Minimum air temperature in Freiburg in 2000") +
   theme(plot.title = element_text(hjust = 0.5))
 
-data.frame(time, fr_prec) %>%   
-  ggplot(aes(time, fr_prec)) + geom_line() +
+data.frame(t, fr_prec) %>%   
+  ggplot(aes(t, fr_prec)) + geom_line() +
   xlab("time (day)") + ylab("precipitation (kg m-2 s-1)") +
   labs(title="Precipitation in Freiburg in 2000") +
   theme(plot.title = element_text(hjust = 0.5))
