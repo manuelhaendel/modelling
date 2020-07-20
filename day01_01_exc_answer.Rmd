@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 
-# How do the authors deﬁne ”simple” and ”complex” models?
+# How do the authors define ”simple” and ”complex” models?
 
 The most detailed model of a particular process is one which is based on
 fundamental physical principles which we believe to be invariant. But a climate
@@ -42,7 +42,7 @@ output consists of the climate change signal only.They  are  useful  mainly  for
 exploring  global  scale questions.
 
 
-# What are the main diﬀerences of models described here, with respect to
+# What are the main differences of models described here, with respect to
 a) processes,
 b) spatial discretisation and numerical solutions?
 
