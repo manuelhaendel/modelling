@@ -1,7 +1,7 @@
 ---
-title: "Exercise 1"
-author: "Manuel Händel"
-date: "20 7 2020"
+title: "Modelling Env. Systems, Day 01, Exercise 01"
+author: "Anna Tenberg, Eva Lorrez, Tsun Fung Yau, Manuel Händel"
+date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
@@ -75,7 +75,10 @@ and the ability to initialize in a steady state.
 
 # Which parts of the model(s) have high uncertainty?
 
-Establishing the link between  aerosol  emissions  and  cloud  properties, however,involves  several  poorly  understood  steps  and  is  highly 
+Establishing the link between  aerosol  emissions  and  cloud  properties,
+however,involves  several  poorly  understood  steps  and  is  highly uncertain.
 
-They are highly dependent on data sets of land-cover, land use, terrain, climate and soil characteristics. The quality of the existing data sets is currently low due to 
-classification problems, data availability and poor temporal and spatial coverage
+They are highly dependent on data sets of land-cover, land use, terrain, climate
+and soil characteristics. The quality of the existing data sets is currently low
+due to classification problems, data availability and poor temporal and spatial
+coverage
