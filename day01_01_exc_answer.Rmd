@@ -44,11 +44,13 @@ exploring  global  scale questions.
 
 # What are the main differences of models described here, with respect to
 One-dimensional radiative-convective atmospheric models
-  processes related to the transfer of solar and infrared radiation within the atmosphere in considerable detail, and are particularly useful for
-  computing the radiative forcing associated with changes in the atmosphere’s composition
+  transfer of solar and infrared radiation within the atmosphere in considerable detail, computing the radiative forcing associated with changes in the atmosphere’s        
+  composition.
+  globally (horizontally) averaged
 
 One-dimensional upwelling-diffusion ocean models
- 
+  Heat exchanges between atmosphere and ocean
+  global
 
 One-dimensional energy balance models
   The multiple processes of north-south heat transport by the atmosphere and oceans and infrared emission to space 
