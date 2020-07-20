@@ -1,0 +1,54 @@
+---
+title: "Exercise 1"
+author: "Manuel Händel"
+date: "20 7 2020"
+output: pdf_document
+---
+
+
+# How do the authors deﬁne ”simple” and ”complex” models?
+
+The most detailed model of a particular process is one which is based on
+fundamental physical principles which we believe to be invariant. But a climate
+model which explicitly included all our current understanding of the climate
+system would be too complex to run  on  any  existing computer. For practical
+purposes, some compromises have to be made. So even the 'complex models', that
+are mentioned in the article, are simplified in several important respects, and
+ultimately depend on parametrizations of processes (A formulation of the effect
+of a small-scale process on the large-scale is called  a  “parametrization”)
+that they cannot explicitly represent. AOGCMs  attempt  to  explicitly represent
+a large number of processes, while simpler models represent these processes by a
+small number of adjustable parameters. The essential difference between simple
+and complex models is the degree of simplification, or the level at which
+parametrization is introduced.
+
+# What are the main advantages/disadvantages of simple climate models, as provided by the authors?
+
+Complex  models  provide  scenarios  of  time-evolving regional  climatic
+change, as  well  as  diurnal  and  seasonal patterns of climatic change and
+changes in extremes and variability at many time-scales. They, therefore, can
+be used in the interpretation of observed regional scale climatic changes.
+On the other hand, complex models are computationally costly, are sometimes
+difficult to understand, and require high resolution data  inputs, which  in
+some  cases  simply  do  not  exist.
+
+Simple  models  represent  only  the  most  critical  processes. Consequently,
+they  are  relatively  easy  to  understand  and inexpensive  to  run. They are
+sufficiently fast that multiple scenarios can be simulated, and that  runs  with
+a  wide  range  of  parameter  values  can  be executed. Can be initialized in a
+steady state at little computational cost. 
+They cannot, however, simulate possible changes in climatic variability as
+output consists of the climate change signal only.They  are  useful  mainly  for
+exploring  global  scale questions.
+
+
+# What are the main diﬀerences of models described here, with respect to
+a) processes,
+b) spatial discretisation and numerical solutions?
+
+
+# Which parts of the model(s) have high uncertainty?
+
+Establishing the link
+between  aerosol  emissions  and  cloud  properties, however,
+involves  several  poorly  understood  steps  and  is  highly 
