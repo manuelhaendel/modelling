@@ -84,6 +84,7 @@ morris_out <- morris(myFun, factors = rownames(refPars)[1:6], r = 4,
                      binf = refPars$lower[1:6],
                      bsup = refPars$upper[1:6])
 
+plot(morris_out)
 
 
 parms_monte = NULL

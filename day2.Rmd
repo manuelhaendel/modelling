@@ -1,21 +1,27 @@
 ---
 title: 'Day 2: Very simple Ecosystem Model'
-author: "Anna Tenberg"
-date: "7/21/2020"
+author: "Anna Tenberg, Manuel Händel"
+date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
 ```
 
 ## Exercise I Carry out a sensitivity analysis of the "very simple ecosystem model" (VSEM) in the package BayesianTools:
 
 ### 1. Have a look at the VSEM model description:
-```{r}
+```{r, include=FALSE}
 library(BayesianTools)
+library(tidyverse)
+library(sensitivity)
+```
+```{r}
 ?VSEM
 ```
+
+
 *A very simple ecosystem model, based on three carbon pools and a basic LUE model*
 
 **Usage:** VSEM(**pars** = c(KEXT = 0.5, LAR = 1.5, LUE = 0.002, GAMMA = 0.4, tauV = 1440, tauS = 27370, tauR = 1440, Av = 0.5, Cv = 3, Cs = 15, Cr = 3), **PAR**, **C** = TRUE)
@@ -41,8 +47,6 @@ PAR <- VSEMcreatePAR(1:(3*365))
 ### 3. Get VSEM to run with the created data and visualize the simulated output (NEE and biomass pools). What catches your eye with regard to above- and below ground biomass, and how can you explain this?
 
 ```{r}
-library(tidyverse)
-
 output <- VSEM(pars = refPars[,1], PAR, C = TRUE)
 df <- as_tibble(output)
 
@@ -71,11 +75,13 @@ The model for above-ground and below-ground carbon pool are the same in this sim
 ### 4. Start with the default parameterisation (which you can store in a matrix by calling VSEMgetDefaults()). Start with a single parameter and vary it from the default to the higher and lower extreme provided in VSEMgetDefaults(). How much does your output change (e.g. absolute change in output / absolute change in parameter)? And how about in %, as “elasticity” (i.e. % change in output / % change in parameter)? 
 ### Calculate both measures for the aboveground biomass output and the parameters LUE and tauV. Do both parameters suggest comparable sensitivities?
 
-Nein weil nicht linear, 
-je höher der wert desto höher die sensitivtät, 
-```{r}
-# function to calculate the last model output with a single changed parameter, default for the above ground C pool
-vary_pars <- function(value, par, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)){
+
+```{r, fig.height=8, fig.width=8}
+# function to calculate the average model output with changed parameters,
+# default for the above ground C pool
+vary_pars <- function(value, par, pool = "Cv",
+                      par_default = VSEMgetDefaults()$best,
+                      PAR = VSEMcreatePAR(1:1000)){
   par_default[par] <- value
   out <- VSEM(par_default, PAR)
   
@@ -85,11 +91,6 @@ vary_pars <- function(value, par, pool = "Cv", par_default = VSEMgetDefaults()$b
   return(out)
 }
 
-# parameter variation over 20 steps
-LUE <- seq(refPars$lower[3], refPars$upper[3], length.out = 20)
-
-# apply on vary_pars function 
-out_LUE <- sapply(LUE, vary_pars, par = 3)
 
 # function to calculate the sensitivity absolute and relative
 sensitivity <- function(pools, pars, measure){
@@ -102,22 +103,27 @@ sensitivity <- function(pools, pars, measure){
   return(sens)
 }
 
-sensitivity(out_LUE, LUE, "abs")
-sensitivity(out_LUE, LUE, "rel")
+# parameter variation over 20 steps
+LUE <- seq(refPars$lower[3], refPars$upper[3], length.out = 20)
 
-par(mfrow = c(1,1))
-plot(sensitivity(out_LUE, LUE, "abs"))
-plot(sensitivity(out_LUE, LUE, "rel"))
+# apply on vary_pars function 
+out_LUE <- sapply(LUE, vary_pars, par = 3)
 
-which(rownames(refPars) == "tauV")
 tauV <- seq(refPars$lower[5], refPars$upper[5], length.out = 20)
 out_tauV <- sapply(tauV, vary_pars, par = 5)
 
-par(mfrow = c(1,1))
-plot(sensitivity(out_tauV, tauV, "abs"))
-plot(sensitivity(out_tauV, tauV, "rel"))
 
+par(mfrow = c(2,1), mar = c(3,2,1,1))
+plot(x = head(LUE, -1), y = sensitivity(out_LUE, LUE, "rel"),
+     main = "Sensitivity Cv: LUE",
+     ylab = "Relative sensitivity", xlab = "Parameter values")
+plot(x = head(tauV, -1), y = sensitivity(out_tauV, tauV, "rel"),
+       main = "Sensitivity Cv: tauV",
+       ylab = "Relative sensitivity", xlab = "Parameter values")
 ```
+
+Both sensitivities increase with increasing parameter values. But the sensitivity of 'tauV' seems to be more linear.
+
 
 ### 5. Now visualise the sensitivity/model output for aboveground biomass of the first 6 parameters across their range of values (between lower and higher) for 20 steps. Only change one parameter at a time. What do you notice: are all parameter sensitivities linear?
 
@@ -136,14 +142,19 @@ for(par in rownames(refPars)[1:6]){
 
 ```
 
+
+No, most sensitivities seem to follow a logistic trend.
+
+
 ### 6. Now do a Morris screening (function morris in package sensitivity), i.e. vary all 6 parameters together.
 Please note that though the first input of morris function in the sensitivity package is a function or a model, you can’t use VSEM directly. The most convenient solution is to create a function (referred to as YourFun) that takes a matrix (e.g., mt) as first argument. The matrix will contain the model parameters chosen (and changed) by the morris function in each row. YourFun has to run VSEM with each parameter set contained in the rows of mt. Be aware that your function will need to know which parameters in the reference parameter set have to be replaced by the mt row entries. In this case, only the first 6 parameters of the reference parameter set will be altered by the morris function. In addition, YourFun has to return a vector of VSEM results for e.g., above ground biomass (use the average).
 
 ```{r}
-library(sensitivity)
-
-YourFun <- function(mt, index, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)) {
-  params <- apply(mt, MARGIN = 1, vary_pars, par = index, pool = pool, par_default = par_default, PAR = PAR)
+YourFun <- function(mt, index, pool = "Cv",
+                    par_default = VSEMgetDefaults()$best,
+                    PAR = VSEMcreatePAR(1:1000)) {
+  params <- apply(mt, MARGIN = 1, vary_pars, par = index, pool = pool,
+                  par_default = par_default, PAR = PAR)
   
   return(params)
 }
@@ -157,10 +168,33 @@ morris_output <- morris(YourFun, factors = rownames(refPars)[1:6], r = 4,
 plot(morris_output)
 ```
 
+
+
+
 ### 7. Finally, we do a rough computer experiment: draw 1000 values uniformly from the range of each of the six parameters (Monte Carlo draw); compute for each combination the VSEM output. Now do a linear regression and analyse the standardized regression coefficients and correlation coefficients. Plot both results: do they suggest the same sensitivities? Are they similar to the Morris screening?
 
-```{r}
+```{r, fig.height=4, fig.width=8}
+parms_monte = NULL
+for (k in 1:1000)
+{
+  KEXT = runif(1,refPars$lower[1],refPars$upper[1])
+  LAR = runif(1,refPars$lower[2],refPars$upper[2])
+  LUE = runif(1,refPars$lower[3],refPars$upper[3])
+  GAMMA = runif(1,refPars$lower[4],refPars$upper[4])
+  tauV = runif(1,refPars$lower[5],refPars$upper[5])
+  tauS = runif(1,refPars$lower[6],refPars$upper[6])
+  parms_monte = rbind(parms_monte, data.frame(KEXT, LAR, LUE, GAMMA, tauV, tauS))
+}
 
+monte_out <- apply(parms_monte, MARGIN = 1, vary_pars, par = 1:6)
+
+
+monte_src <- sensitivity::src(X = parms_monte, y = monte_out)
+
+
+par(mfrow = c(1,2), mar = c(2,2,1,1))
+plot(monte_src)
+plot(morris_output)
 
 ```
 
