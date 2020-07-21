@@ -36,31 +36,83 @@ PAR <- VSEMcreatePAR(1:(3*365))
 
 # load reference parameter definition (upper, lower prior)
 (refPars <- VSEMgetDefaults())
-
-params <- c( KEXT = )
-
 ```
 
 ### 3. Get VSEM to run with the created data and visualize the simulated output (NEE and biomass pools). What catches your eye with regard to above- and below ground biomass, and how can you explain this?
+
 ```{r}
+library(tidyverse)
+
 output <- VSEM(pars = refPars[,1], PAR, C = TRUE)
+df <- as_tibble(output)
 
-# Net ecosystem exchange [kg C /m2 /day]
-NEE <- output[,1]
-# C in above ground vegetation pool [kg C /m2]
-Cv <- output[,2]
-# C in organic matter [kg C / m2]
-Cs <- output[,3]
-# C in below ground vegetation pool [kg C /m2]
-CR <- output[,4]
+# plot for the NEE
+df %>% 
+  ggplot(aes(1:1095, NEE)) + geom_line() +
+  xlab("time [days]") + ylab("NEE [kg C / m2 / day]") +
+  labs(title="VSEM: Net Ecosystem Exchange over 3 years") +
+  theme_gray() +
+  theme(plot.title = element_text(hjust = 0.5)) 
 
-plot(1:1095, NEE)
+# plot for the Carbon biomass
+df %>% 
+  ggplot() + 
+  geom_line(aes(x = 1:1095, y = Cv, colour = "above-ground"), alpha = .5) +
+  geom_line(aes(x = 1:1095, y = CR, colour = "below-ground"), alpha = .5) +
+  geom_line(aes(x = 1:1095, y = Cs, colour = "organic matter")) +
+  xlab("time [days]") + ylab("biomass in kg C / m2]") +
+  labs(title="VSEM: Biomass changes over 3 years") +
+  theme_gray() +
+  theme(plot.title = element_text(hjust = 0.5)) 
 
 ```
+The model for above-ground and below-ground carbon pool are the same in this simulation, because they are calculated in relation to each other with the fixed allocation parameter set in the beginning as $tauR = tauV$ and the simulation begins with the same start values for above- and below-ground carbon pools $Cv = Cr$.
 
 ### 4. Start with the default parameterisation (which you can store in a matrix by calling VSEMgetDefaults()). Start with a single parameter and vary it from the default to the higher and lower extreme provided in VSEMgetDefaults(). How much does your output change (e.g. absolute change in output / absolute change in parameter)? And how about in %, as “elasticity” (i.e. % change in output / % change in parameter)? 
 ### Calculate both measures for the aboveground biomass output and the parameters LUE and tauV. Do both parameters suggest comparable sensitivities?
+
+Nein weil nicht linear, 
+je höher der wert desto höher die sensitivtät, 
 ```{r}
+# function to calculate the last model output with a single changed parameter, default for the above ground C pool
+vary_pars <- function(value, par, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)){
+  par_default[par] <- value
+  out <- VSEM(par_default, PAR)
+  
+  return(mean(out[, which(colnames(out) == pool)], 1))
+}
+
+# parameter variation over 20 steps
+LUE <- seq(refPars$lower[3], refPars$upper[3], length.out = 20)
+
+# apply on vary_pars function 
+out_LUE <- sapply(LUE, vary_pars, par = 3)
+
+# function to calculate the sensitivity absolute and relative
+sensitivity <- function(pools, pars, measure){
+  if(measure == "abs")
+    sens <- diff(pools) / diff(pars)
+  
+  if(measure == "rel")
+    sens <- (tail(pools, -1) / head(pools, -1)) / (tail(pars, -1) / head(pars, -1))
+  
+  return(sens)
+}
+
+sensitivity(out_LUE, LUE, "abs")
+sensitivity(out_LUE, LUE, "rel")
+
+par(mfrow = c(1,1))
+plot(sensitivity(out_LUE, LUE, "abs"))
+plot(sensitivity(out_LUE, LUE, "rel"))
+
+which(rownames(refPars) == "tauV")
+tauV <- seq(refPars$lower[5], refPars$upper[5], length.out = 20)
+out_tauV <- sapply(tauV, vary_pars, par = 5)
+
+par(mfrow = c(1,1))
+plot(sensitivity(out_tauV, tauV, "abs"))
+plot(sensitivity(out_tauV, tauV, "rel"))
 
 ```
 
@@ -68,14 +120,45 @@ plot(1:1095, NEE)
 
 ```{r}
 
+par(mfrow = c(2,3))
+for(par in rownames(refPars)[1:6]){
+  index <- which(rownames(refPars) == par)
+  pars <- seq(refPars$lower[index], refPars$upper[index], length.out = 20)
+  out <- sapply(pars, vary_pars, par = index)
+  
+  plot(x = head(pars, -1), y = sensitivity(out, pars, "rel"),
+       main = paste("Sensitivity Cv: ", par),
+       ylab = "Relative sensitivity", xlab = "Parameter values")
+}
+
 ```
 
 ### 6. Now do a Morris screening (function morris in package sensitivity), i.e. vary all 6 parameters together.
 Please note that though the first input of morris function in the sensitivity package is a function or a model, you can’t use VSEM directly. The most convenient solution is to create a function (referred to as YourFun) that takes a matrix (e.g., mt) as first argument. The matrix will contain the model parameters chosen (and changed) by the morris function in each row. YourFun has to run VSEM with each parameter set contained in the rows of mt. Be aware that your function will need to know which parameters in the reference parameter set have to be replaced by the mt row entries. In this case, only the first 6 parameters of the reference parameter set will be altered by the morris function. In addition, YourFun has to return a vector of VSEM results for e.g., above ground biomass (use the average).
 
 ```{r}
+library(sensitivity)
+
+helper <- function(x, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)){
+  par_default[1:6] <- x
+  out <- VSEM(par_default, PAR)
+  
+  col <- which(colnames(out) == pool)
+  out <- mean(out[,col])
+  
+  return(out)
+}
+
+YourFun <- function(mt, index, PAR = VSEMcreatePAR(1:1000)) {
+  params <- apply(mt, MARGIN = 1, vary_pars, par = index)
+  
+  return(params)
+}
+
+x <- morris(YourFun, factors = 6, r = 4, list(type = "oat", levels = 5, grid.jump = 3), index = 1:6)
 
 ```
 
-### 7. Finally, we do a rough computer experiment: draw 1000 values uniformly from the range of each of the six parameters (Monte Carlo draw); compute for each combination the VSEM output . 
-Now do a linear regression and analyse the standardized regression coefficients and correlation coefficients. Plot both results: do they suggest the same sensitivities? Are they similar to the Morris screening?
+### 7. Finally, we do a rough computer experiment: draw 1000 values uniformly from the range of each of the six parameters (Monte Carlo draw); compute for each combination the VSEM output. Now do a linear regression and analyse the standardized regression coefficients and correlation coefficients. Plot both results: do they suggest the same sensitivities? Are they similar to the Morris screening?
+
+
