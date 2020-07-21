@@ -148,14 +148,19 @@ YourFun <- function(mt, index, pool = "Cv", par_default = VSEMgetDefaults()$best
   return(params)
 }
 
-x <- morris(YourFun, factors = rownames(refPars)[1:6], r = 4,
+morris_output <- morris(YourFun, factors = rownames(refPars)[1:6], r = 4,
             design = list(type = "oat", levels = 5, grid.jump = 3),
             binf = refPars$lower[1:6],
             bsup = refPars$upper[1:6],
             index = 1:6)
 
+plot(morris_output)
 ```
 
 ### 7. Finally, we do a rough computer experiment: draw 1000 values uniformly from the range of each of the six parameters (Monte Carlo draw); compute for each combination the VSEM output. Now do a linear regression and analyse the standardized regression coefficients and correlation coefficients. Plot both results: do they suggest the same sensitivities? Are they similar to the Morris screening?
 
+```{r}
+
+
+```
 
