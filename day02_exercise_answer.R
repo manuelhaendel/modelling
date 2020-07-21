@@ -8,9 +8,6 @@ plot(PAR, main = "PAR (driving the model)", xlab = "Day")
 
 # load reference parameter definition (upper, lower prior)
 refPars <- VSEMgetDefaults()
-# this adds one additional parameter for the likelihood standard deviation (see below)
-refPars[12,] <- c(2, 0.1, 4) 
-rownames(refPars)[12] <- "error-sd"
 tail(refPars)
 
 # create some simulated test data 
@@ -34,9 +31,6 @@ vary_pars <- function(value, par, pool = "Cv", par_default = VSEMgetDefaults()$b
 }
 
 
-LUE <- seq(refPars$lower[3], refPars$upper[3], length.out = 20)
-out_LUE <- sapply(LUE, vary_pars, par = 3)
-
 sensitivity <- function(pools, pars, measure){
   if(measure == "abs")
     sens <- diff(pools) / diff(pars)
@@ -47,8 +41,34 @@ sensitivity <- function(pools, pars, measure){
   return(sens)
 }
 
-sensitivity(out_LUE, LUE, "abs")
-sensitivity(out_LUE, LUE, "rel")
+
+LUE <- seq(refPars$lower[3], refPars$upper[3], length.out = 20)
+out_LUE <- sapply(LUE, vary_pars, par = 3)
+
+par(mfrow = c(1,1))
+plot(sensitivity(out_LUE, LUE, "abs"))
+plot(sensitivity(out_LUE, LUE, "rel"))
+
+which(rownames(refPars) == "tauV")
+tauV <- seq(refPars$lower[5], refPars$upper[5], length.out = 20)
+out_tauV <- sapply(tauV, vary_pars, par = 5)
+
+par(mfrow = c(1,1))
+plot(sensitivity(out_tauV, tauV, "abs"))
+plot(sensitivity(out_tauV, tauV, "rel"))
+
+par(mfrow = c(2,3))
+for(par in rownames(refPars)[1:6]){
+  index <- which(rownames(refPars) == par)
+  pars <- seq(refPars$lower[index], refPars$upper[index], length.out = 20)
+  out <- sapply(pars, vary_pars, par = index)
+  
+  plot(x = head(pars, -1), y = sensitivity(out, pars, "rel"),
+       main = paste("Sensitivity above ground biomass: ", par),
+       ylab = "Relative sensitivity", xlab = "Parameter values")
+}
+
+
 
 
 
