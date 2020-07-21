@@ -86,7 +86,7 @@ myFun <- function(mt,  pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = 
   return(out)
 }
 
-morris_out <- morris(myFun, factors = 6, r = 4,
+morris_out <- morris(myFun, factors = rownames(refPars)[1:6], r = 4,
                      design = list(type = "oat", levels = 5, grid.jump = 3))
 
 
