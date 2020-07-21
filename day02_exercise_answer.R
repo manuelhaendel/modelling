@@ -28,7 +28,10 @@ vary_pars <- function(value, par, pool = "Cv", par_default = VSEMgetDefaults()$b
   par_default[par] <- value
   out <- VSEM(par_default, PAR)
   
-  return(tail(out[, which(colnames(out) == pool)], 1))
+  col <- which(colnames(out) == pool)
+  out <- mean(out[,col])
+  
+  return(out)
 }
 
 
@@ -70,26 +73,52 @@ for(par in rownames(refPars)[1:6]){
 }
 
 
-helper <- function(x, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)){
-  par_default[1:6] <- x
-  out <- VSEM(par_default, PAR)
+YourFun <- function(mt, index, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)) {
+  params <- apply(mt, MARGIN = 1, vary_pars, par = index, pool = pool, par_default = par_default, PAR = PAR)
   
-  col <- which(colnames(out) == pool)
-  out <- mean(out[,col])
-  
-  return(out)
-}
-
-myFun <- function(mt,  pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)){
-  
-  out <- apply(X = mt, MARGIN = 1, FUN = helper, pool = pool, par_default = par_default, PAR = PAR)
-  return(out)
+  return(params)
 }
 
 morris_out <- morris(myFun, factors = rownames(refPars)[1:6], r = 4,
                      design = list(type = "oat", levels = 5, grid.jump = 3),
                      binf = refPars$lower[1:6],
                      bsup = refPars$upper[1:6])
+
+
+
+parms_monte = NULL
+for (k in 1:1000)
+{
+  KEXT = runif(1,refPars$lower[1],refPars$upper[1])
+  LAR = runif(1,refPars$lower[2],refPars$upper[2])
+  LUE = runif(1,refPars$lower[3],refPars$upper[3])
+  GAMMA = runif(1,refPars$lower[4],refPars$upper[4])
+  tauV = runif(1,refPars$lower[5],refPars$upper[5])
+  tauS = runif(1,refPars$lower[6],refPars$upper[6])
+  parms_monte = rbind(parms_monte, data.frame(KEXT, LAR, LUE, GAMMA, tauV, tauS))
+}
+
+monte_out <- apply(parms_monte, MARGIN = 1, vary_pars, par = 1:6)
+
+
+monte_src <- sensitivity::src(X = parms_monte, y = monte_out)
+
+
+par(mfrow = c(1,2))
+plot(monte_src)
+plot(morris_out)
+
+
+
+
+
+plot(out ~ parms_monte[,1], data.frame(out = monte_out, index = 1:1000))
+
+monte_lm <- lm(out ~ parm, data.frame(out = monte_out, parm = parms_monte[,1]))
+
+
+
+
 
 
 test <- refPars$best
