@@ -1,0 +1,81 @@
+---
+title: 'Day 2: Very simple Ecosystem Model'
+author: "Anna Tenberg"
+date: "7/21/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercise I Carry out a sensitivity analysis of the "very simple ecosystem model" (VSEM) in the package BayesianTools:
+
+### 1. Have a look at the VSEM model description:
+```{r}
+library(BayesianTools)
+?VSEM
+```
+*A very simple ecosystem model, based on three carbon pools and a basic LUE model*
+
+**Usage:** VSEM(**pars** = c(KEXT = 0.5, LAR = 1.5, LUE = 0.002, GAMMA = 0.4, tauV = 1440, tauS = 27370, tauR = 1440, Av = 0.5, Cv = 3, Cs = 15, Cr = 3), **PAR**, **C** = TRUE)
+
+**Arguments: **
+
+pars	= a parameter vector with parameters and initial states
+
+PAR	= Forcing, photosynthetically active radiation (PAR) MJ /m2 /day
+
+C	= switch to choose whether to use the C or R version of the model. C is much faster.
+
+
+### 2. Create some input data (radiation) and get a set of reference parameters as shown in the Examples section.
+```{r}
+# Create input data for the model
+PAR <- VSEMcreatePAR(1:(3*365))
+
+# load reference parameter definition (upper, lower prior)
+(refPars <- VSEMgetDefaults())
+
+params <- c( KEXT = )
+
+```
+
+### 3. Get VSEM to run with the created data and visualize the simulated output (NEE and biomass pools). What catches your eye with regard to above- and below ground biomass, and how can you explain this?
+```{r}
+output <- VSEM(pars = refPars[,1], PAR, C = TRUE)
+
+# Net ecosystem exchange [kg C /m2 /day]
+NEE <- output[,1]
+# C in above ground vegetation pool [kg C /m2]
+Cv <- output[,2]
+# C in organic matter [kg C / m2]
+Cs <- output[,3]
+# C in below ground vegetation pool [kg C /m2]
+CR <- output[,4]
+
+plot(1:1095, NEE)
+
+```
+
+### 4. Start with the default parameterisation (which you can store in a matrix by calling VSEMgetDefaults()). Start with a single parameter and vary it from the default to the higher and lower extreme provided in VSEMgetDefaults(). How much does your output change (e.g. absolute change in output / absolute change in parameter)? And how about in %, as “elasticity” (i.e. % change in output / % change in parameter)? 
+### Calculate both measures for the aboveground biomass output and the parameters LUE and tauV. Do both parameters suggest comparable sensitivities?
+```{r}
+
+```
+
+### 5. Now visualise the sensitivity/model output for aboveground biomass of the first 6 parameters across their range of values (between lower and higher) for 20 steps. Only change one parameter at a time. What do you notice: are all parameter sensitivities linear?
+
+```{r}
+
+```
+
+### 6. Now do a Morris screening (function morris in package sensitivity), i.e. vary all 6 parameters together.
+Please note that though the first input of morris function in the sensitivity package is a function or a model, you can’t use VSEM directly. The most convenient solution is to create a function (referred to as YourFun) that takes a matrix (e.g., mt) as first argument. The matrix will contain the model parameters chosen (and changed) by the morris function in each row. YourFun has to run VSEM with each parameter set contained in the rows of mt. Be aware that your function will need to know which parameters in the reference parameter set have to be replaced by the mt row entries. In this case, only the first 6 parameters of the reference parameter set will be altered by the morris function. In addition, YourFun has to return a vector of VSEM results for e.g., above ground biomass (use the average).
+
+```{r}
+
+```
+
+### 7. Finally, we do a rough computer experiment: draw 1000 values uniformly from the range of each of the six parameters (Monte Carlo draw); compute for each combination the VSEM output . 
+Now do a linear regression and analyse the standardized regression coefficients and correlation coefficients. Plot both results: do they suggest the same sensitivities? Are they similar to the Morris screening?
