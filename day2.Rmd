@@ -79,7 +79,10 @@ vary_pars <- function(value, par, pool = "Cv", par_default = VSEMgetDefaults()$b
   par_default[par] <- value
   out <- VSEM(par_default, PAR)
   
-  return(mean(out[, which(colnames(out) == pool)], 1))
+  col <- which(colnames(out) == pool)
+  out <- mean(out[,col])
+  
+  return(out)
 }
 
 # parameter variation over 20 steps
@@ -139,23 +142,17 @@ Please note that though the first input of morris function in the sensitivity pa
 ```{r}
 library(sensitivity)
 
-helper <- function(x, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)){
-  par_default[1:6] <- x
-  out <- VSEM(par_default, PAR)
-  
-  col <- which(colnames(out) == pool)
-  out <- mean(out[,col])
-  
-  return(out)
-}
-
-YourFun <- function(mt, index, PAR = VSEMcreatePAR(1:1000)) {
-  params <- apply(mt, MARGIN = 1, vary_pars, par = index)
+YourFun <- function(mt, index, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)) {
+  params <- apply(mt, MARGIN = 1, vary_pars, par = index, pool = pool, par_default = par_default, PAR = PAR)
   
   return(params)
 }
 
-x <- morris(YourFun, factors = 6, r = 4, list(type = "oat", levels = 5, grid.jump = 3), index = 1:6)
+x <- morris(YourFun, factors = rownames(refPars)[1:6], r = 4,
+            design = list(type = "oat", levels = 5, grid.jump = 3),
+            binf = refPars$lower[1:6],
+            bsup = refPars$upper[1:6],
+            index = 1:6)
 
 ```
 
