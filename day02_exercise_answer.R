@@ -1,4 +1,5 @@
 library(BayesianTools)
+library(sensitivity)
 ?VSEM
 
 
@@ -63,11 +64,35 @@ for(par in rownames(refPars)[1:6]){
   pars <- seq(refPars$lower[index], refPars$upper[index], length.out = 20)
   out <- sapply(pars, vary_pars, par = index)
   
-  plot(x = head(pars, -1), y = sensitivity(out, pars, "rel"),
+  plot(x = head(pars, -1), y = sensitivity(out, pars, "rel"), pch = 20,
        main = paste("Sensitivity above ground biomass: ", par),
        ylab = "Relative sensitivity", xlab = "Parameter values")
 }
 
+
+helper <- function(x, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)){
+  par_default[1:6] <- x
+  out <- VSEM(par_default, PAR)
+  
+  col <- which(colnames(out) == pool)
+  out <- mean(out[,col])
+  
+  return(out)
+}
+
+myFun <- function(mt,  pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)){
+  
+  out <- apply(X = mt, MARGIN = 1, FUN = helper, pool = pool, par_default = par_default, PAR = PAR)
+  return(out)
+}
+
+morris_out <- morris(myFun, factors = 6, r = 4,
+                     design = list(type = "oat", levels = 5, grid.jump = 3))
+
+
+test <- refPars$best
+test[3] <- refPars$lower[3]
+test_helper <- helper(test[1:6])
 
 
 
