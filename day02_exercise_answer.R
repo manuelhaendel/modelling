@@ -26,6 +26,29 @@ plot(referenceData[,4], main = "Cr (Below-ground vegetation pool )", xlab = "Day
 
 
 
+vary_pars <- function(value, par, pool = "Cv", par_default = VSEMgetDefaults()$best, PAR = VSEMcreatePAR(1:1000)){
+  par_default[par] <- value
+  out <- VSEM(par_default, PAR)
+  
+  return(tail(out[, which(colnames(out) == pool)], 1))
+}
+
+
+LUE <- seq(refPars$lower[3], refPars$upper[3], length.out = 20)
+out_LUE <- sapply(LUE, vary_pars, par = 3)
+
+sensitivity <- function(pools, pars, measure){
+  if(measure == "abs")
+    sens <- diff(pools) / diff(pars)
+  
+  if(measure == "rel")
+    sens <- (tail(pools, -1) / head(pools, -1)) / (tail(pars, -1) / head(pars, -1))
+  
+  return(sens)
+}
+
+sensitivity(out_LUE, LUE, "abs")
+sensitivity(out_LUE, LUE, "rel")
 
 
 
@@ -43,12 +66,3 @@ dLUE_rel <- refPars$lower[3] / refPars$best[3]
 
 sens_rel <- dCv_rel / dLUE_rel
 
-
-# this adds the error - needs to conform to the error definition in the likelihood
-obs <- referenceData + rnorm(length(referenceData), sd = refPars$best[12])
-oldpar <- par(mfrow = c(2,2))
-for (i in 1:4) plotTimeSeries(observed = obs[,i], 
-                              predicted = referenceData[,i], main = colnames(referenceData)[i])
-
-# Best to program in a way that we can choose easily which parameters to calibrate
-parSel = c(1:6, 12)
