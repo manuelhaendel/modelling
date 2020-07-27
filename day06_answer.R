@@ -32,4 +32,22 @@ soil_y <- soil %>%
 pivot_longer(soil_y, 2:4) %>% ggplot(aes(x = year, y = value, fill = name)) +
   geom_bar(stat="identity")
 
+con <- file("C:/Users/Manuel/Documents/Studium/MSc_Umweltwissenschaften/model_env_sys/VM_share/PH_losbanos-icon-wetrice-con_mana.xml")
+
+events <- readLines(con)
+
+close(con)
+
+
+open <- grep("<event", events)
+close <- grep("</event>", events)
+fert <- grep(pattern = "fertilize", events)
+
+get_lines <- function(line){
+  start <- open[tail(which(open <= line), 1)]
+  end <- close[head(which(close >= line), 1)]
+  return(c(start, end))
+}
+
+lapply(fert, get_lines)
 
