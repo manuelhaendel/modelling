@@ -1,0 +1,29 @@
+---
+title: "GHG in rice ecosystems"
+author: "Tsun-Fung Yau, Tze-Li Liu, Manuel Händel, Anna Tenberg"
+date: "27 7 2020"
+output: pdf_document
+---
+
+# 1. What are the major greenhouse gases of rice ecosystems? Shortly discuss relevant factors for their production/consumption.
+
+CO2:
+Production:
+When CH4 is oxidized in the upper soil layers, CO2 is beeing produced.
+Consumption:
+Photosynthesis
+
+N2O:
+Production:
+Fertilization
+
+CH4:
+Production:
+In lower layers under anaerobic conditions, when there is no more oxygen as an
+electron acceptor CO2 is used instead and mehtane is produced.
+Comsumption:
+Oxidization of CH4 to CO2 in upper layers.
+
+
+# 2. What are the major transport pathways of gaseous substances in and out of the soil system?
+Diffusion through plant aerenchyma, ebullition and dissusion through soil layers.
