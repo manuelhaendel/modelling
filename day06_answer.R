@@ -32,22 +32,68 @@ soil_y <- soil %>%
 pivot_longer(soil_y, 2:4) %>% ggplot(aes(x = year, y = value, fill = name)) +
   geom_bar(stat="identity")
 
-con <- file("C:/Users/Manuel/Documents/Studium/MSc_Umweltwissenschaften/model_env_sys/VM_share/PH_losbanos-icon-wetrice-con_mana.xml")
 
-events <- readLines(con)
+# the output of the simulation without fertilization
+soil_noFert <- read.table("../PH_losbanos-icon-wetrice_output_no_fert/PH_losbanos-icon-wetrice-con_no_fert_soilchemistry-daily.txt",
+                          header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+soil_noFert_y <- soil_noFert %>% 
+  mutate_at("datetime", lubridate::ymd_hms) %>% 
+  mutate(year = year(datetime)) %>% 
+  group_by(year) %>% 
+  summarise_at(cols, sum) %>% 
+  ungroup() %>% 
+  transmute(year = year,
+            gwp_co2 = (dC_co2_emis_auto.kgCha.1. + dC_co2_emis_hetero.kgCha.1.) * co2_fac,
+            gwp_ch4 = dC_ch4_emis.kgCha.1. * ch4_fac * 86,
+            gwp_n2o = dN_n2o_emis.kgNha.1. * n2o_fac * 268)
 
-close(con)
+data.frame(rbind(soil_y , soil_noFert_y) , 
+           scenario = c(rep("default" , nrow(soil_y)) , rep("noFert" , nrow(soil_noFert_y)))) %>% 
+  tidyr::pivot_longer(2:4) %>% 
+  ggplot(aes(x = year, y = value, fill = name)) +
+  geom_bar(stat="identity") +
+  facet_grid(. ~ scenario)
 
 
-open <- grep("<event", events)
-close <- grep("</event>", events)
-fert <- grep(pattern = "fertilize", events)
+# replacing a rice crop with corn in dry season
+climate <- read.table("../PH_losbanos_climate.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE, skip = 21)
+names(climate)[1] <- "date"
+climate$date <- ymd(climate$date)
 
-get_lines <- function(line){
-  start <- open[tail(which(open <= line), 1)]
-  end <- close[head(which(close >= line), 1)]
-  return(c(start, end))
-}
+climate %>% 
+  mutate(month = month(date)) %>% 
+  group_by(month) %>% 
+  summarise(prec = sum(prec)) %>% 
+  ggplot() +
+  geom_point(aes(x=factor(month), y = prec))
 
-lapply(fert, get_lines)
+
+soil_Corn <- read.table("../PH_losbanos-icon-wetrice_output_with_corn/PH_losbanos-icon-wetrice-con_with_corn_soilchemistry-daily.txt",
+                          header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+soil_Corn_y <- soil_Corn %>% 
+  mutate_at("datetime", lubridate::ymd_hms) %>% 
+  mutate(year = year(datetime)) %>% 
+  group_by(year) %>% 
+  summarise_at(cols, sum) %>% 
+  ungroup() %>% 
+  transmute(year = year,
+            gwp_co2 = (dC_co2_emis_auto.kgCha.1. + dC_co2_emis_hetero.kgCha.1.) * co2_fac,
+            gwp_ch4 = dC_ch4_emis.kgCha.1. * ch4_fac * 86,
+            gwp_n2o = dN_n2o_emis.kgNha.1. * n2o_fac * 268)
+
+data.frame(rbind(soil_y , soil_noFert_y, soil_Corn_y) , 
+           scenario = c(rep("default" , nrow(soil_y)) ,
+                        rep("noFert" , nrow(soil_noFert_y)),
+                        rep("withCorn" , nrow(soil_Corn_y)))) %>% 
+  tidyr::pivot_longer(2:4) %>% 
+  ggplot(aes(x = year, y = value, fill = name)) +
+  geom_bar(stat="identity") +
+  facet_grid(. ~ scenario)
+
+
+# 
+
+
+
+
 
