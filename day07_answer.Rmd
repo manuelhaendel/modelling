@@ -223,7 +223,16 @@ fertilizer types:
 • nitrate: "no3”  
 • urea: "urea“  
 • ammonium nitrate: "nh4no3” since it is frequently used  
-```{r}
 
+```{r}
+# NH3_harvest <- read.table("PH_losbanos-icon-wetrice-con_report-harvest_nh3.txt" , header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# NH3_chem <- read.table("PH_losbanos-icon-wetrice-con_soilchemistry-yearly_nh3.txt" , header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# NO3_harvest <- read.table("PH_losbanos-icon-wetrice-con_report-harvest_no3.txt" , header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# NO3_chem <- read.table("PH_losbanos-icon-wetrice-con_soilchemistry-yearly_no3.txt" , header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# urea_harvest <- read.table("PH_losbanos-icon-wetrice-con_report-harvest_urea.txt" , header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# urea_chem <- read.table("PH_losbanos-icon-wetrice-con_soilchemistry-yearly_urea.txt" , header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# nh4no3_harvest <- read.table("PH_losbanos-icon-wetrice-con_report-harvest_nh4no3.txt" , header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# nh4no3_chem <- read.table("PH_losbanos-icon-wetrice-con_soilchemistry-yearly_nh4no3.txt" , header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# We have finished the simulation and got the output, but didn't have enough time to finish the N-balance calculation and the visualizaiton
 ```
 
