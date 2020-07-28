@@ -91,7 +91,32 @@ data.frame(rbind(soil_y , soil_noFert_y, soil_Corn_y) ,
   facet_grid(. ~ scenario)
 
 
-# 
+# projection to 2089-2099
+soil_proj <- read.table("../PH_losbanos-icon-wetrice_output_projection/PH_losbanos-icon-wetrice-con_projection_soilchemistry-daily.txt",
+                        header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+soil_proj_y <- soil_proj %>% 
+  mutate_at("datetime", lubridate::ymd_hms) %>% 
+  mutate(year = year(datetime)) %>% 
+  group_by(year) %>% 
+  summarise_at(cols, sum) %>% 
+  ungroup() %>% 
+  transmute(year = year,
+            gwp_co2 = (dC_co2_emis_auto.kgCha.1. + dC_co2_emis_hetero.kgCha.1.) * co2_fac,
+            gwp_ch4 = dC_ch4_emis.kgCha.1. * ch4_fac * 86,
+            gwp_n2o = dN_n2o_emis.kgNha.1. * n2o_fac * 268,
+            scenario = "projection") %>% 
+  mutate(year = year - 2088)
+
+data.frame(rbind(soil_y , soil_noFert_y, soil_Corn_y) , 
+           scenario = c(rep("default" , nrow(soil_y)) ,
+                        rep("noFert" , nrow(soil_noFert_y)),
+                        rep("withCorn" , nrow(soil_Corn_y)))) %>%
+  mutate(year = year - 2006) %>% 
+  rbind(soil_proj_y) %>% 
+  tidyr::pivot_longer(2:4) %>% 
+  ggplot(aes(x = year, y = value, fill = name)) +
+  geom_bar(stat="identity") +
+  facet_grid(. ~ scenario)
 
 
 

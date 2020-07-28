@@ -5,7 +5,8 @@ date: "27 7 2020"
 output: pdf_document
 ---
 
-# 1. What are the major greenhouse gases of rice ecosystems? Shortly discuss relevant factors for their production/consumption.
+# Questions
+## 1. What are the major greenhouse gases of rice ecosystems? Shortly discuss relevant factors for their production/consumption.
 
 CO2:
 Production:
@@ -25,5 +26,127 @@ Comsumption:
 Oxidization of CH4 to CO2 in upper layers.
 
 
-# 2. What are the major transport pathways of gaseous substances in and out of the soil system?
+## 2. What are the major transport pathways of gaseous substances in and out of the soil system?
 Diffusion through plant aerenchyma, ebullition and dissusion through soil layers.
+
+
+# Modelling exercise
+
+## 1. Run the LandscapeDNDC simulation project PH_losbanos-icon-wetrice-con.ldndc
+## 2. Create an annual GHG budget using the Global Warming Potential metric.
+
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(lubridate)
+
+
+setwd("C:/Users/Manuel/Documents/Studium/MSc_Umweltwissenschaften/model_env_sys/VM_share/PH_losbanos-icon-wetrice_output/")
+
+# read in data
+soil <- read.table("PH_losbanos-icon-wetrice-con_soilchemistry-daily.txt",
+                   header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+
+# get columns of the ghg emissions
+cols <- grep("ch4_emis|co2_emis|n2o_emis", names(soil))
+
+# factors to convert elementary to molecular weight
+co2_fac <- (12+32)/12
+ch4_fac <- (12+4)/12
+n2o_fac <- (28+16)/28
+
+# sum up daily to yearly values, convert weights and calculate the global
+# warming potential
+soil_y <- soil %>% 
+  mutate_at("datetime", lubridate::ymd_hms) %>% 
+  mutate(year = year(datetime)) %>% 
+  group_by(year) %>% 
+  summarise_at(cols, sum) %>% 
+  ungroup() %>% 
+  transmute(year = year,
+              gwp_co2 = (dC_co2_emis_auto.kgCha.1. + dC_co2_emis_hetero.kgCha.1.) * co2_fac,
+              gwp_ch4 = dC_ch4_emis.kgCha.1. * ch4_fac * 86,
+              gwp_n2o = dN_n2o_emis.kgNha.1. * n2o_fac * 268)
+
+
+pivot_longer(soil_y, 2:4) %>% ggplot(aes(x = year, y = value, fill = name)) +
+  geom_bar(stat="identity")
+```
+
+
+## 3. Adapt the field management and run the simulation again and discuss the results:
+• Remove all fertilization events  
+• Replace a rice crop in the dry season by maize  
+• Create your own scenario (e.g., change climate, atmospheric CO 2 concentrations, field management, ...)  
+
+```{r, warning=FALSE, message=FALSE}
+setwd("C:/Users/Manuel/Documents/Studium/MSc_Umweltwissenschaften/model_env_sys/VM_share/PH_losbanos-icon-wetrice_output/")
+
+# the output of the simulation without fertilization
+soil_noFert <- read.table("../PH_losbanos-icon-wetrice_output_no_fert/PH_losbanos-icon-wetrice-con_no_fert_soilchemistry-daily.txt",
+                          header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+soil_noFert_y <- soil_noFert %>% 
+  mutate_at("datetime", lubridate::ymd_hms) %>% 
+  mutate(year = year(datetime)) %>% 
+  group_by(year) %>% 
+  summarise_at(cols, sum) %>% 
+  ungroup() %>% 
+  transmute(year = year,
+            gwp_co2 = (dC_co2_emis_auto.kgCha.1. + dC_co2_emis_hetero.kgCha.1.) * co2_fac,
+            gwp_ch4 = dC_ch4_emis.kgCha.1. * ch4_fac * 86,
+            gwp_n2o = dN_n2o_emis.kgNha.1. * n2o_fac * 268)
+
+
+# replacing a rice crop with corn in dry season
+soil_Corn <- read.table("../PH_losbanos-icon-wetrice_output_with_corn/PH_losbanos-icon-wetrice-con_with_corn_soilchemistry-daily.txt",
+                          header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+soil_Corn_y <- soil_Corn %>% 
+  mutate_at("datetime", lubridate::ymd_hms) %>% 
+  mutate(year = year(datetime)) %>% 
+  group_by(year) %>% 
+  summarise_at(cols, sum) %>% 
+  ungroup() %>% 
+  transmute(year = year,
+            gwp_co2 = (dC_co2_emis_auto.kgCha.1. + dC_co2_emis_hetero.kgCha.1.) * co2_fac,
+            gwp_ch4 = dC_ch4_emis.kgCha.1. * ch4_fac * 86,
+            gwp_n2o = dN_n2o_emis.kgNha.1. * n2o_fac * 268)
+
+
+# projection to 2089-2099
+soil_proj <- read.table("../PH_losbanos-icon-wetrice_output_projection/PH_losbanos-icon-wetrice-con_projection_soilchemistry-daily.txt",
+                        header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+soil_proj_y <- soil_proj %>% 
+  mutate_at("datetime", lubridate::ymd_hms) %>% 
+  mutate(year = year(datetime)) %>% 
+  group_by(year) %>% 
+  summarise_at(cols, sum) %>% 
+  ungroup() %>% 
+  transmute(year = year,
+            gwp_co2 = (dC_co2_emis_auto.kgCha.1. + dC_co2_emis_hetero.kgCha.1.) * co2_fac,
+            gwp_ch4 = dC_ch4_emis.kgCha.1. * ch4_fac * 86,
+            gwp_n2o = dN_n2o_emis.kgNha.1. * n2o_fac * 268,
+            scenario = "projection") %>% 
+  mutate(year = year - 2088)
+
+data.frame(rbind(soil_y , soil_noFert_y, soil_Corn_y) , 
+           scenario = c(rep("default" , nrow(soil_y)) ,
+                        rep("noFert" , nrow(soil_noFert_y)),
+                        rep("withCorn" , nrow(soil_Corn_y)))) %>%
+  mutate(year = year - 2006) %>% 
+  rbind(soil_proj_y) %>% 
+  tidyr::pivot_longer(2:4) %>% 
+  ggplot(aes(x = year, y = value, fill = name)) +
+  geom_bar(stat="identity") +
+  facet_grid(. ~ scenario)
+
+```
+
+
+For the projection data, we used the data set of the climate input file and ran
+the model from 2089 - 2099. In order to do so we changed the years in the event
+input file so they match.
+
+The different changes to the field management mainly have an impact on the CH4
+emissions. No fertilization and replacing the rice crop with corn in the dry
+seasons results in less CH4 emissions, while the emissions under a climate
+change scenario slightly increase.
