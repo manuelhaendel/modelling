@@ -1,0 +1,36 @@
+---
+title: "Nitrogen balance"
+author: "Tsun-Fung Yau, Tze-Li, Manuel Händel, Eva Lorrez"
+date: "28 7 2020"
+output: pdf_document
+---
+
+
+# Questions
+## 1. What are the main components of an ecosystem N budget?
+
+
+
+## 2. What are the major N cycling processes in soils? Brieﬂy describe the N cycle in ecosystems.
+
+N2 -> NH4:
+biological/industrial N2 fixation
+NH4 -> NO3:
+nitrification
+NH4 <-> micr. biom.:
+immobilisation
+ammonification
+NH4 -> NH3:
+volatilization
+NH4 -> Plant:
+uptake
+NO3 -> Plant:
+uptake
+NO3 leaching
+NO3 -> N2:
+denitrification
+micr. biom <-> SOM:
+depolymerisation
+senescence
+Plant -> SOM:
+senescence
