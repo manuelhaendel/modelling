@@ -98,22 +98,19 @@ default_parms <- list(t = time,
 # }
 
 
-
+# return model output (average total C of last 12 months of model run)
 get_output <- function(model_parms = default_parms){
   
   model <- do.call(RothCModel, model_parms)
   carbon <- getC(model)
-  # return the sum of the average amount of carbon in each pool during the last
-  # 12 months of the simulation.
+  
   return(sum(colMeans(tail(carbon, 12))))
 }
 
 
-change_parms <- function(par_value, par_name, env_data = data, par_list = default_parms){
+# update external effects table
+update_extfx <- function(par_value, par_name, env_data, time){
   
-  # browser()
-    
-  # change climate data
   for(i in seq_along(par_name)){
     env_data[par_name[i]] <- env_data[par_name[i]] + par_value[i]
   }
@@ -127,18 +124,39 @@ change_parms <- function(par_value, par_name, env_data = data, par_list = defaul
   # external (environmental and/or edaphic) effects on decomposition rates
   ext_fx <- moist_fact * temp_fact
   
-  # time steps
-  time <- par_list[["t"]]
-  
   # data frame with the external effects for each time step
   ext_fx_frame <- data.frame(t = time, fx = rep_len(ext_fx, length.out = length(time)))
   
-  par_list[["xi"]] <- ext_fx_frame
+  return(ext_fx_frame)
+}
+
+# change individual parameter values and return model output
+change_parms <- function(par_value, par_name, env_data = data, par_list = default_parms){
+  
+  # browser()
+  
+  # different parameters need to be treated differently, get indeces of the
+  # three different parameter groups (climate data, k-rates and rest)
+  ind_env <- grep(pattern = "temp|prec", x = par_name)
+  ind_ks <- grep(pattern = "^k\\.", x = par_name)
+  ind_rest <- which(!(seq_along(par_name) %in% c(ind_env, ind_ks)))
+  # grep(pattern = "^k\\.", x = par_name, invert = TRUE)
+    
+  # changes in climate data input
+  if(length(ind_env) != 0)
+    par_list[["xi"]] <- update_extfx(par_value, par_name, env_data, time = par_list[["t"]])
+  
+  # changes in model parameter set
+  if(length(c(ind_ks, ind_rest)) != 0){
+    par_list[["ks"]][par_name[ind_ks]] <- par_value[ind_ks]
+    par_list[par_name[ind_rest]] <- par_value[ind_rest]
+  }
   
   output <- get_output(par_list)
   return(output)
 }
 
+# return sensitivity scores
 sensitivity <- function(pools, pars, measure){
   if(measure == "abs")
     sens <- diff(pools) / diff(pars)
@@ -157,6 +175,7 @@ sens <- sensitivity(stocks, par_seq, "rel")
 plot(x = head(par_seq,-1), y = sens, main = "temp")
 plot(x = par_seq, y = stocks)
 
+
 par_seq <- seq(-15,15, length.out = 20)
 
 stocks <- sapply(par_seq, change_parms, par_name = "prec")
@@ -170,6 +189,10 @@ morris_fun <- function(mt, par_name, par_list = default_parms){
   result <- apply(mt, 1, change_parms, par_name = par_name, par_list = par_list)
   return(result)
 }
+
+names_pars <- c("temp", "prec")
+lower <- c(0, -15)
+upper <- c(2, 15)
 
 names_pars <- c("temp", "prec")
 lower <- c(0, -15)
