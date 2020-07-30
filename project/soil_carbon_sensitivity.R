@@ -33,7 +33,7 @@ Evp <- data.frame(Month=1:12,
 soil <- 25
 
 ##  rate modifying factor for moisture 
-moist_fact <- fW.RothC(P = data$prec, E = Evp$Evp, S.Thick = soil, bare = TRUE)[,2]
+moist_fact <- fW.RothC(P = data$prec, E = Evp$Evp, S.Thick = soil, pE = 1, bare = FALSE)[,2]
 
 ##  rate modifying factor for temperature
 temp_fact <- fT.RothC(data$temp)
@@ -45,7 +45,7 @@ ext_fx <- moist_fact * temp_fact
 time <- seq(1/12, 400, 1/12)
 
 ## data frame with the external effects for each time step
-ext_fx_frame <- data.frame(t = time, fx = rep(ext_fx, 400))
+ext_fx_frame <- data.frame(t = time, fx = rep_len(ext_fx, length.out = length(time)))
 
 SOC <- 69.7
 IOM <- 0.049*SOC^(1.139)
@@ -61,7 +61,7 @@ for(i in 1:5){
          col = i, ylim = range(carbon), type = "l",
          xlab = "Years", ylab = "Carbon in [Mg/ha]")
     legend(x = 200, y = 15, legend = c("DPM", "RPM", "BIO", "HUM", "IOM"), fill = 1:5)
-  } 
+  }
   if(i > 1) lines(time, carbon[,i], col = i)
 }
 
@@ -70,7 +70,7 @@ for(i in 1:5){
 ## parameter list.
 
 init <- c(tail(carbon, 1))
-time <- seq(1/12, 400, 1/12)
+time <- seq(1/12, 100, 1/12)
 ext_fx_frame <- data.frame(t = time, fx = rep_len(ext_fx, length.out = length(time)))
 
 default_parms <- list(t = time,
@@ -79,23 +79,23 @@ default_parms <- list(t = time,
                       C0 = init, In = 2.7, DR = 1.44, clay = 48,
                       xi = ext_fx_frame)
 
-changed_parms <- default_parms
-changed_parms[["clay"]] <- 25
-changed_parms[["In"]] <- 5
-changed_parms[["ks"]]["k.HUM"] <- 0.03
-changed_parms[["ks"]]["k.RPM"] <- 0.2
-
-carbon <- getC(do.call(RothCModel, changed_parms))
-
-for(i in 1:5){
-  if(i == 1){
-    plot(time, carbon[,i],
-         col = i, ylim = range(carbon), type = "l",
-         xlab = "Years", ylab = "Carbon in [Mg/ha]")
-    legend(x = 200, y = 15, legend = c("DPM", "RPM", "BIO", "HUM", "IOM"), fill = 1:5)
-  } 
-  if(i > 1) lines(time, carbon[,i], col = i)
-}
+# changed_parms <- default_parms
+# changed_parms[["clay"]] <- 25
+# changed_parms[["In"]] <- 5
+# changed_parms[["ks"]]["k.HUM"] <- 0.03
+# changed_parms[["ks"]]["k.RPM"] <- 0.2
+# 
+# carbon <- getC(do.call(RothCModel, changed_parms))
+# 
+# for(i in 1:5){
+#   if(i == 1){
+#     plot(time, carbon[,i],
+#          col = i, ylim = range(carbon), type = "l",
+#          xlab = "Years", ylab = "Carbon in [Mg/ha]")
+#     legend(x = 200, y = 15, legend = c("DPM", "RPM", "BIO", "HUM", "IOM"), fill = 1:5)
+#   } 
+#   if(i > 1) lines(time, carbon[,i], col = i)
+# }
 
 
 
@@ -109,15 +109,33 @@ get_output <- function(model_parms = default_parms){
 }
 
 
-change_parms <- function(par_value, par_name, par_default = default_parms){
+change_parms <- function(par_value, par_name, env_data = data, par_list = default_parms){
+  
   # browser()
-  ind_ks <- grep(pattern = "^k\\.", x = par_name)
-  ind_rest <- grep(pattern = "^k\\.", x = par_name, invert = TRUE)
+    
+  # change climate data
+  for(i in seq_along(par_name)){
+    env_data[par_name[i]] <- env_data[par_name[i]] + par_value[i]
+  }
   
-  par_default[["ks"]][par_name[ind_ks]] <- par_value[ind_ks]
-  par_default[par_name[ind_rest]] <- par_value[ind_rest]
+  #  rate modifying factor for moisture 
+  moist_fact <- fW.RothC(P = env_data$prec, E = Evp$Evp, S.Thick = soil, pE = 1, bare = FALSE)[,2]
   
-  output <- get_output(par_default)
+  #  rate modifying factor for temperature
+  temp_fact <- fT.RothC(env_data$temp)
+  
+  # external (environmental and/or edaphic) effects on decomposition rates
+  ext_fx <- moist_fact * temp_fact
+  
+  # time steps
+  time <- par_list[["t"]]
+  
+  # data frame with the external effects for each time step
+  ext_fx_frame <- data.frame(t = time, fx = rep_len(ext_fx, length.out = length(time)))
+  
+  par_list[["xi"]] <- ext_fx_frame
+  
+  output <- get_output(par_list)
   return(output)
 }
 
@@ -132,33 +150,39 @@ sensitivity <- function(pools, pars, measure){
 }
 
 
+par_seq <- seq(0,2, length.out = 20)
 
-stocks <- sapply(seq(5,15, length.out = 20), change_parms, par_name = "k.DPM")
-sensitivity(stocks, seq(5,15, length.out = 20), "rel")
-plot(x = head(seq(5,15, length.out = 20),-1), y = sensitivity(stocks, seq(5,15, length.out = 20), "rel"))
-plot(x = seq(5,15, length.out = 20), y = stocks)
+stocks <- sapply(par_seq, change_parms, par_name = "temp")
+sens <- sensitivity(stocks, par_seq, "rel")
+plot(x = head(par_seq,-1), y = sens, main = "temp")
+plot(x = par_seq, y = stocks)
+
+par_seq <- seq(-15,15, length.out = 20)
+
+stocks <- sapply(par_seq, change_parms, par_name = "prec")
+sens <- sensitivity(stocks, par_seq, "rel")
+plot(x = head(par_seq,-1), y = sens, main = "prec")
+plot(x = par_seq, y = stocks)
 
 
-stocks <- sapply(seq(5,15, length.out = 20), change_parms, par_name = "k.DPM")
 
-morris_fun <- function(mt, par_name, par_default = default_parms){
-  result <- apply(mt, 1, change_parms, par_name = par_name, par_default = par_default)
+morris_fun <- function(mt, par_name, par_list = default_parms){
+  result <- apply(mt, 1, change_parms, par_name = par_name, par_list = par_list)
   return(result)
 }
 
-names_pars <- c("k.DPM", "k.RPM", "k.BIO", "k.HUM")
-lower <- c(5, 0.15, 0.33, 0.01)
-upper <- c(15, 0.45, 0.99, 0.03)
+names_pars <- c("temp", "prec")
+lower <- c(0, -15)
+upper <- c(2, 15)
 
-morris_output <- morris(morris_fun, factors = names_pars, r = 200,
+morris_output <- morris(morris_fun, factors = names_pars, r = 20,
                         design = list(type = "oat", levels = 8, grid.jump = 4),
                         binf = lower, bsup = upper, par_name = names_pars)
 
+# saveRDS(morris_output, "data/morris_k_rates.rds")
+morris_output <- readRDS("data/morris_k_rates.rds")
+
 plot(morris_output)
-saveRDS(morris_output, "data/morris_k_rates.rds")
-
-
-
 
 
 
