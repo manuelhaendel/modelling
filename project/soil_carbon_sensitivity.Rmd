@@ -1,0 +1,237 @@
+---
+title: "Sensitivity Analysis of the RothC soil carbon turnover model"
+author: "Manuel Händel"
+date: "`r Sys.Date()`"
+output: pdf_document
+tables: true # to make tables with booktab = TRUE work
+bibliography: soil_carbon_sensitivity.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+Atmospheric $CO_{2}$ is the most important greenhouse gas (GHG) contributing to climate change. It increased by 40% from 278 ppm about 1750 to 390.5 ppm in 2011, which corresponds  to  a  mass  of  828  PgC. The carbon stored in vegetation living biomass amounts to 450 to 650 PgC and that in soils to 1500 to 2400 PgC, which makes it more than the atmospheric and vegetational carbon stocks combined (all numbers and fluxes from @ar5). This illustrates the immense role that soils play in the global carbon cycle. The main path by which carbon (in the form of $CO_{2}$) returns to the atmosphere is through soil respiration, which is 15 times higher than the $CO_{2}$ flux from burning fossil fuels for example. Together with gross primary production (GPP, carbon assimilation through photosynthesis) soil respiration determines the net flux of carbon between terrestrial ecosystems and the atmosphere. The effects of climate change on both processes is still highly debated. The classical view was that soil respiration is more sensitive to temperature than GPP, since temperature is its dominant limiting factor, while there are other factors limiting photosynthesis besides temperature. Under this assumption, the $CO_{2}$ release of soils to the atmosphere would exceed GPP in awarming global climate, resulting in a positive feedback loop to climate change (see @davidson2006). This assumption was implemented in most models that predict soil carbon turnover processes.
+
+One of these models is the Rothamsted turnover model (RothC, see @jenkinson1990 and @jenkinson1977). It is a multicompartment model that includes temperature and soil moisture (via precipitation and evaporation) as model inputs. In this report I want to perform a sensitivity analysis with regards to the model parameters and especially to the environmental inputs of the RothC model, to reveal how climate sensitivity is implemented in the model and make comparisons, with assumptions about the real sensitivities, possible.
+
+# Methods
+
+## Climate Data
+To perform the sensitivity analysis, I used climate data from Worldclim version 2.1 (@worldclim). These are monthly data averaged over the period of 1970-2000 in a spatial resolution of 2.5 minutes. To estimate possible future climate scenarios I also downloaded the future climate data set from Worldclim for the SSP scenario 5-8.5 and the period of 2081-2100. The data are CMIP6 downscaled future climate projections. To create a reference data set I extracted the data from the coordinates of Freiburg, Germany. For the future scenario I averaged the values of the available global climate models (see Appendix I).
+
+## The RothC Model
+I performed the sensitivity analysis with *R* and *RStudio* (@rcore, @rstudio), using the packages *raster* and *sensitivity* for the analysis and data handlind respectively (see @sens and @raster). The RothC model is implemented in the *soilR* package (see @sierra2012). For detailed information about the model see @jenkinson1990 and @guide. I will briefly explain the different parameters and climate inputs. In the model the soil organic matter is divided into 4 active compartments and a fifth inactive compartment for inert organic matter (IOM). The four active compartments are decomposable plant material (DPM), resistant plant material (RPM), microbial biomass (BIO) and humified organic matter (HUM). Each compartment decomposes by a first-order process with its own characteristic rate. Incoming carbon in the form of litter is split into DPM and RPM, depending on a DPM/RPM ratio, that is a model parameter and representative of a certain site. Both DPM and RPM then decompose further to the same products: BIO, HUM and $CO_{2}$, which is lost to the system. BIO and HUM both decompose to form more $CO_2$ BIO and HUM, the ratio between $CO_{2}$ and BIO + HUM is defined by the clay content of the soil. Environmental influences are considered by multiplying the decomposition rates with a rate modifying factor for temperature and moisture, that are calculated using the monthly reference data for temperature and precipitation and evaporation respectively. I set the rest of the model parameters to the following default values, which, together with the environmental inputs from Table \ref{tab:env}, completes the parameter list:  
+- Soil thickness: 25 cm  
+- IOM: 6.16 Mg/ha  
+- Clay content: 48%  
+- C inputs: 2.7 Mg/(ha*yr)  
+- DPM/RPM ratio: 1.44
+
+```{r env, echo=FALSE}
+knitr::kable(x = rbind(Month = as.character(lubridate::month(1:12, label = TRUE)),
+                       "Temp [°C]" = c(1.75, 2.86, 6.42, 9.55, 14.24, 17.29, 19.6, 19.25, 15.32, 10.4, 5.4, 2.92),
+                       "Precip [mm]" = c(56, 57, 57, 71, 100, 104, 96, 82, 76, 75, 72, 73),
+                       "Evapo [mm]" = c(12, 18, 35, 58, 82, 90, 97, 84, 54, 31, 14, 10)),
+             caption = ("Table of environmental model inputs. These values are used to determine the rate modifying
+                        factors."),
+             format = "latex",
+             booktabs = TRUE)
+```
+
+
+I ran the model for 400 years with this setup, to see when the carbon stocks would reach a stable state, which was after about 300 years. To calculate the sensitivity scores, I later ran the model for an additional 100 years after this spin up phase (see Appendix II).
+
+## Sensitivity Analysis and Morris Screening
+
+To asses the sensitivity of the model output in regards to the model parameters and the environmental inputs, I calculated the absolute change in model output in relation to the parameter change over a range of parameter values. Model output was the average total carbon of all five compartments during the last twelve months of a model run of 100 years (after spin up phase). The code for the sensitivity analysis is shown in Appendix III.
+
+Because the model output does not depend on one value of the environmental inputs, but rather on twelve monthly values, it is not possible to define a range of values and calculate the corresponding sensitivity scores. To still be able to perform a sensitivity analysis for these inputs, I approached them slightly different. Instead of a range of parameter values I define a range of parameter value changes. These changes are then applied to the twelve data points and a model output with the new data can be produced. For the temperature, I set the parameter range from 0K to 8K. A parameter value of 1 does not mean that the input to the model is 1°C (which is impossible, because the model expects twelve inputs for the monthly temperatures), but rather that each monthly temperature value was increased by 1K from the default. For precipitation, two different approaches can be distinguished. In the first one the changes to the default values are applied to each month in the same way. Here I set the parameter range from -15mm to 15mm. This means a parameter value of 15 represents an increase of 15mm to the default monthly precipitation values, -10 a decrease of all twelve values by 10mm and so on. This is the same as for the temperature data. The second approach tries to replicate an assumed future precipitation scenario, where precipitation during the summer months decreases while it increases during the winter. For this approach the parameter ranges from 0mm to 15mm. A parameter value of 10 now means a decrease of the default precipitation data of 10mm for the summer months (may - september) and an increase of 10mm to the winter months. Basically the parameter range is then a severitiy measure of how pronounced this seasonal precipitation shift is (see funtion definition *update_extfx* in Appendix III).  
+The limits to the parameter changes have been determined by comparing the current climate with the future climate scenario, which is shown in figure \ref{fig:env_comp}. The maximal change in temperature of 8K, represents the largest difference between the current and future climate. For precipitation the deviation of the SSP 5-8.5 scenario from the current climate identifies the months may until september as months with decreased monthly precipitation, while rainfall is increased during the rest of the year. The maximal change of 15mm was determined by calculating 20% of the mean monthly precipitation of the current climate and was confirmed by the maximal deviations between the current and future climate.
+
+
+![Comparison of current and future climate. The black line is the current climate (1970-2000), the red line future climate for SSP 5-8.5. \label{fig:env_comp}](figures/env_comp.png){width=100% height=100%}
+
+
+
+I also applied the method of Morris to asses sensitivity. This is done by so called 'one-factor-at-a-time' experiments, where, as the name suggests, the effect of one factor at a time is evaluated, on multiple trajectories through the k-dimensional factor space (k is the number of factors, whose effects on model output is tested). From all the trajectories a distribution of the elementary effect of the i-th factor, can be generated, which is called $F_i$. The distribution of the absolute elemantary effect is called $G_i$. From these distributions, two sensitivity measures can be derived: $\mu^*$ and $\sigma$. $\mu^*$ is the mean of distribution $G_I$ and $\sigma$ the standard deviation of $F_i$. $\mu^*$ is the measure of the overall importance of a factor on model output, while a large $\sigma$ can indicate a factors interaction with other factors or a non-linear effect on the output. This is a very short recapitulation of the method, for further informations see @morris1991 or @sierra2012. The method is implemented in the package *sensitivity*. To be able to run the *morris* function, some helper functions need to be defined. They are shwon in Appendix III and IV.
+
+# Results
+
+
+# Appendix I: Climate data preparation
+```{r, eval=FALSE}
+# read climate data
+## source: WorldClim version 2.1 climate data for 1970-2000. Spatial resolution
+## is 2.5 minutes (~21 km2).
+paths <- list.files(path = "data/climate_current",
+                    pattern = "tavg.*\\.tif$", full.names = TRUE)
+extract_freiburg <- function(path) extract(raster(path), matrix(c(7.8, 48), ncol=2))
+temp <- sapply(paths, extract_freiburg)
+
+paths <- list.files(path = "data/climate_current",
+                    pattern = "prec.*\\.tif$", full.names = TRUE)
+prec <- sapply(paths, extract_freiburg)
+
+data <- data.frame(month = 1:12,
+                   temp = temp,
+                   prec = prec)
+rownames(data) <- NULL
+```
+
+
+# Appendix II: Parameter setup and spin up
+
+```{r, eval=FALSE}
+# set model parameters
+## evaporation
+Evp <- data.frame(Month=1:12,
+                  Evp=c(12, 18, 35, 58, 82,
+                        90, 97, 84, 54, 31, 14, 10))
+## soil thickness in cm
+soil <- 25
+
+##  rate modifying factor for moisture 
+moist_fact <- fW.RothC(P = data$prec, E = Evp$Evp,
+                       S.Thick = soil, pE = 1, bare = FALSE)[,2]
+
+##  rate modifying factor for temperature
+temp_fact <- fT.RothC(data$temp)
+
+## external (environmental and/or edaphic) effects on decomposition rates
+ext_fx <- moist_fact * temp_fact
+
+## time steps
+time <- seq(1/12, 400, 1/12)
+
+## data frame with the external effects for each time step
+ext_fx_frame <- data.frame(t = time, fx = rep_len(ext_fx, length.out = length(time)))
+
+SOC <- 69.7
+IOM <- 0.049*SOC^(1.139)
+
+model_output <- RothCModel(t = time, C0 = c(0,0,0,0,IOM),
+                           In = 2.7, clay = 48, xi = ext_fx_frame)
+
+carbon <- getC(model_output)
+
+for(i in 1:5){
+  if(i == 1){
+    plot(time, carbon[,i],
+         col = i, ylim = range(carbon), type = "l",
+         xlab = "Years", ylab = "Carbon in [Mg/ha]")
+    legend(x = 200, y = 15, legend = c("DPM", "RPM", "BIO", "HUM", "IOM"), fill = 1:5)
+  }
+  if(i > 1) lines(time, carbon[,i], col = i)
+}
+
+## The carbon pools reach a stable state after 300 years. I will use the carbon
+## pools after this spin up phase as initial carbon stocks for a default
+## parameter list.
+
+init <- c(tail(carbon, 1))
+time <- seq(1/12, 100, 1/12)
+ext_fx_frame <- data.frame(t = time, fx = rep_len(ext_fx, length.out = length(time)))
+
+default_parms <- list(ks = c(k.DPM = 10, k.RPM = 0.3, k.BIO = 0.66,
+                             k.HUM = 0.02, k.IOM = 0),
+                      In = 2.7, clay = 48, xi = ext_fx_frame,
+                      t = time, C0 = init, DR = 1.44)
+```
+
+
+# Appendix III: helper functions for sensitivity measures and morris screening
+```{r, eval=FALSE}
+# return model output (average total C of last 12 months of model run)
+get_output <- function(model_parms = default_parms){
+
+  model <- do.call(RothCModel, model_parms[])
+  carbon <- getC(model)
+  
+  return(sum(colMeans(tail(carbon, 12))))
+}
+
+
+# update external effects table
+update_extfx <- function(par_value, par_name, env_data, time){
+  
+  for(i in seq_along(par_name)){
+    if(par_name[i] == "prec_season"){
+      env_data["prec"] <- (env_data["prec"]
+                                + c(1,1,1,1,-1,-1,-1,-1,-1,1,1,1) * par_value[i])
+    }
+    else
+      env_data[par_name[i]] <- env_data[par_name[i]] + par_value[i]
+  }
+  
+  #  rate modifying factor for moisture 
+  moist_fact <- fW.RothC(P = env_data$prec, E = Evp$Evp, S.Thick = soil, pE = 1, bare = FALSE)[,2]
+  
+  #  rate modifying factor for temperature
+  temp_fact <- fT.RothC(env_data$temp)
+  
+  # external (environmental and/or edaphic) effects on decomposition rates
+  ext_fx <- moist_fact * temp_fact
+  
+  # data frame with the external effects for each time step
+  ext_fx_frame <- data.frame(t = time, fx = rep_len(ext_fx, length.out = length(time)))
+  
+  return(ext_fx_frame)
+}
+
+# change individual parameter values and return model output
+change_parms <- function(par_value, par_name, env_data = data, par_list = default_parms){
+  
+  # different parameters need to be treated differently, get indeces of the
+  # three different parameter groups (climate data, k-rates and rest)
+  ind_env <- grep(pattern = "temp|prec", x = par_name)
+  ind_ks <- grep(pattern = "^k\\.", x = par_name)
+  ind_rest <- which(!(seq_along(par_name) %in% c(ind_env, ind_ks)))
+  # grep(pattern = "^k\\.", x = par_name, invert = TRUE)
+    
+  # changes in climate data input
+  if(length(ind_env) != 0)
+    par_list[["xi"]] <- update_extfx(par_value, par_name, env_data = env_data, time = par_list[["t"]])
+  
+  # changes in model parameter set
+  if(length(c(ind_ks, ind_rest)) != 0){
+    par_list[["ks"]][par_name[ind_ks]] <- par_value[ind_ks]
+    par_list[par_name[ind_rest]] <- par_value[ind_rest]
+  }
+  
+  output <- get_output(par_list)
+  return(output)
+}
+
+# return sensitivity scores
+sensitivity <- function(pools, pars, measure){
+  if(measure == "abs")
+    sens <- diff(pools) / diff(pars)
+  
+  if(measure == "rel")
+    sens <- (diff(pools) / head(pools, -1)) / (diff(pars) / head(pars, -1))
+  
+  return(sens)
+}
+
+# return model output for every row of the morris-function-matrix
+morris_fun <- function(mt, par_name, par_list = default_parms){
+  result <- apply(mt, 1, change_parms, par_name = par_name, par_list = par_list)
+  return(result)
+}
+
+```
+
+
+# Appendix IV: examples for sensitivity and morris screening
+
+```{r, eval=FALSE}
+# sensitivity scores over a range of temperature changes
+par_seq <- seq(0,2, length.out = 20)
+
+stocks <- sapply(par_seq, change_parms, par_name = "temp")
+sens <- sensitivity(stocks, par_seq, "abs")
+```
+
