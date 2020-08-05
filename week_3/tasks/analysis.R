@@ -1,5 +1,9 @@
 library(dplyr)
-setwd("C:/Users/Manuel/Documents/Studium/MSc_Umweltwissenschaften/model_env_sys/week_3/tasks/task1")
+setwd("C:/Users/Manuel/Documents/Studium/MSc_Umweltwissenschaften/model_env_sys/week_3/tasks/task2")
+
+rottmann <- read.csv2("rottmann.csv", stringsAsFactors = FALSE)
+rottmann <- mutate_all(rottmann, as.numeric)
+lm_rott <- lm(damaged ~ hd + I(hd^2), data = rottmann)
 
 
 get_table <- function(path){
