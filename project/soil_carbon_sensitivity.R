@@ -48,7 +48,7 @@ png("figures/env_comp.png", width = 20, height = 10, units = "cm", res = 200)
 par(mfrow = c(1,2))
 # temperature scenario comparison
 plot(data$temp, type="l", ylim = range(c(data$temp, tavg_fut_585)), xaxt = "n",
-     xlab = "Month", ylab = "Temperature [°C]")
+     xlab = "Month", ylab = "Temperature [°C]", main = "a")
 axis(1, 1:12, labels = as.character(lubridate::month(1:12, label = TRUE)))
 points(data$temp, pch = 20)
 lines(tavg_fut_585, col="red")
@@ -57,7 +57,7 @@ points(tavg_fut_585, col="red", pch=20)
 
 # precipitation scenario comparison
 plot(data$prec, type="l", ylim = range(c(data$prec, prec_fut_126, prec_fut_585)), xaxt = "n",
-     xlab = "Month", ylab = "Precipitation [mm]")
+     xlab = "Month", ylab = "Precipitation [mm]", main = "b")
 axis(1, 1:12, labels = as.character(lubridate::month(1:12, label = TRUE)))
 points(data$prec, pch = 20)
 lines(prec_fut_585, col="red")
@@ -215,29 +215,65 @@ sensitivity <- function(pools, pars, measure){
 }
 
 
-par_seq <- seq(0,2, length.out = 20)
 
-stocks <- sapply(par_seq, change_parms, par_name = "temp")
-sens <- sensitivity(stocks, par_seq, "abs")
-plot(x = head(par_seq,-1), y = sens, main = "temp")
-plot(x = par_seq, y = stocks)
+par_seq_temp <- seq(0,8, length.out = 20)
+stocks_temp <- sapply(par_seq_temp, change_parms, par_name = "temp")
+sens_temp <- sensitivity(stocks_temp, par_seq_temp, "abs")
 
+par_seq_prec <- seq(-15,15, length.out = 20)
+stocks_prec <- sapply(par_seq_prec, change_parms, par_name = "prec")
 
-par_seq <- seq(-15,15, length.out = 20)
+par_seq_prec_s <- seq(0,15, length.out = 20)
+stocks_prec_s <- sapply(par_seq_prec_s, change_parms, par_name = "prec_season")
+sens_prec_s <- sensitivity(stocks_prec_s, par_seq_prec_s, "abs")
 
-stocks <- sapply(par_seq, change_parms, par_name = "prec")
-sens <- sensitivity(stocks, par_seq, "abs")
-plot(x = head(par_seq,-1), y = sens, main = "prec")
-plot(x = par_seq, y = stocks)
+png("figures/sens_inputs.png", width = 20, height = 20, units = "cm", res = 200)
+par(mfrow = c(2,2))
 
-par_seq <- seq(0,15, length.out = 20)
+plot(x = par_seq_temp, y = stocks_temp,  main = "a", pch = 20,
+     xlab = "Temperature [K]", ylab = "Carbon stock [Mg/ha]")
+plot(x = head(par_seq_temp,-1), y = sens_temp, main = "b", pch = 20,
+     xlab = "Temperature [K]", ylab = "Sensitivity")
 
-stocks <- sapply(par_seq, change_parms, par_name = "prec_season")
-sens <- sensitivity(stocks, par_seq, "rel")
-plot(x = head(par_seq,-1), y = sens, main = "prec_season")
-plot(x = par_seq, y = stocks)
+plot(x = par_seq_prec_s, y = stocks_prec_s,  main = "c", pch = 20,
+     xlab = "Precipitation [mm]", ylab = "Carbon stock [Mg/ha]")
+plot(x = head(par_seq_prec_s,-1), y = sens_prec_s,  main = "d", pch = 20,
+     xlab = "Precipitation [mm]", ylab = "Sensitivity")
 
+dev.off()
 
+par_seq_rpm <- seq(0.15,0.45, length.out = 20)
+stocks_rpm <- sapply(par_seq_rpm, change_parms, par_name = "k.RPM")
+sens_rpm <- sensitivity(stocks_rpm, par_seq_rpm, "abs")
+
+par_seq_hum <- seq(0.01,0.03, length.out = 20)
+stocks_hum <- sapply(par_seq_hum, change_parms, par_name = "k.HUM")
+sens_hum <- sensitivity(stocks_hum, par_seq_hum, "abs")
+
+par_seq_In <- seq(1.35,4.05, length.out = 20)
+stocks_In <- sapply(par_seq_In, change_parms, par_name = "In")
+sens_In <- sensitivity(stocks_In, par_seq_In, "abs")
+
+png("figures/sens_parms.png", width = 20, height = 20, units = "cm", res = 200)
+par(mfrow = c(2,2))
+
+plot(x = par_seq_In, y = stocks_In,  main = "a", pch = 20,
+     xlab = "Carbon input [Mg/ha]", ylab = "Carbon stock [Mg/ha]")
+plot(x = head(par_seq_In,-1), y = sens_In, main = "b", pch = 20, ylim = c(6.5,7.5),
+     xlab = "Carbon input [Mg/ha]", ylab = "Sensitivity")
+
+plot(x = par_seq_hum, y = stocks_hum,  main = "c", pch = 20,
+     xlab = "Decomposition rate [MgC/(ha*yr)]", ylab = "Carbon stock [Mg/ha]")
+plot(x = head(par_seq_hum,-1), y = sens_hum,  main = "d", pch = 20,
+     xlab = "Decomposition rate [MgC/(ha*yr)]", ylab = "Sensitivity")
+
+# plot(x = par_seq_rpm, y = stocks_rpm,  main = "e", pch = 20,
+#      xlab = "Decomposition rate [MgC/(ha*yr)]", ylab = "Carbon stock [Mg/ha]")
+# plot(x = head(par_seq_rpm,-1), y = sens_rpm,  main = "f", pch = 20,
+#      xlab = "Decomposition rate [MgC/(ha*yr)]", ylab = "Sensitivity")
+
+dev.off()
+par(mfrow=c(1,1))
 
 # return model output for every row of the morris-function-matrix
 morris_fun <- function(mt, par_name, par_list = default_parms){
@@ -249,22 +285,49 @@ names_pars <- c("temp", "prec_season")
 lower <- c(0, 0)
 upper <- c(2, 15)
 
-names_pars <- c("temp", "prec")
-lower <- c(0, -15)
-upper <- c(2, 15)
+morris_output_inputs <- morris(morris_fun, factors = names_pars, r = 20,
+                        design = list(type = "oat", levels = 8, grid.jump = 4),
+                        binf = lower, bsup = upper, par_name = names_pars)
+mu <- colMeans(abs(morris_output_inputs$ee))
+sigma <- apply(morris_output_inputs$ee, 2, sd)
+
+plot(mu, sigma, pch = 20, xlab = "µ*", ylab = expression(sigma))
+text(mu + c(-0.1, 0.1), sigma, labels = c("temp", "prcp"))
+
+# names_pars <- c("temp", "prec")
+# lower <- c(0, -15)
+# upper <- c(2, 15)
 
 names_pars <- c("k.DPM", "k.RPM", "k.BIO", "k.HUM", "In", "clay")
 lower <- c(5, 0.15, 0.33, 0.01, 1.35, 24)
 upper <- c(15, 0.45, 0.99, 0.03, 4.05, 72)
 
-morris_output <- morris(morris_fun, factors = names_pars, r = 20,
+morris_output_parameters <- morris(morris_fun, factors = names_pars, r = 20,
                         design = list(type = "oat", levels = 8, grid.jump = 4),
                         binf = lower, bsup = upper, par_name = names_pars)
+
+png("figures/morris.png", width = 30, height = 15, units = "cm", res = 200)
+par(mfrow=c(1,2))
+mu <- colMeans(abs(morris_output_inputs$ee))
+sigma <- apply(morris_output_inputs$ee, 2, sd)
+
+plot(mu, sigma, pch = 20, xlab = "µ*", ylab = expression(sigma), main = "a")
+text(mu + c(-0.15, 0.15), sigma, labels = c("temp", "prcp"))
+
+mu <- colMeans(abs(morris_output_parameters$ee))
+sigma <- apply(morris_output_parameters$ee, 2, sd)
+
+plot(mu, sigma, pch = 20, xlab = "µ*", ylab = expression(sigma), main = "b")
+text(mu + c(1.4, 1.4, 1.4, -1.4, -0.7, 1), sigma + c(0,0,0.15,0,0,0), labels = names_pars)
+dev.off()
+par(mfrow = c(1,1))
+
+plot(morris_output_parameters)
 
 saveRDS(morris_output, "data/morris_k_rates_In_clay.rds")
 morris_output <- readRDS("data/morris_k_rates.rds")
 
-plot(morris_output)
+
 
 
 

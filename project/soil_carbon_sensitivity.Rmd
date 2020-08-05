@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-Atmospheric $CO_{2}$ is the most important greenhouse gas (GHG) contributing to climate change. It increased by 40% from 278 ppm about 1750 to 390.5 ppm in 2011, which corresponds  to  a  mass  of  828  PgC. The carbon stored in vegetation living biomass amounts to 450 to 650 PgC and that in soils to 1500 to 2400 PgC, which makes it more than the atmospheric and vegetational carbon stocks combined (all numbers and fluxes from @ar5). This illustrates the immense role that soils play in the global carbon cycle. The main path by which carbon (in the form of $CO_{2}$) returns to the atmosphere is through soil respiration, which is 15 times higher than the $CO_{2}$ flux from burning fossil fuels for example. Together with gross primary production (GPP, carbon assimilation through photosynthesis) soil respiration determines the net flux of carbon between terrestrial ecosystems and the atmosphere. The effects of climate change on both processes is still highly debated. The classical view was that soil respiration is more sensitive to temperature than GPP, since temperature is its dominant limiting factor, while there are other factors limiting photosynthesis besides temperature. Under this assumption, the $CO_{2}$ release of soils to the atmosphere would exceed GPP in awarming global climate, resulting in a positive feedback loop to climate change (see @davidson2006). This assumption was implemented in most models that predict soil carbon turnover processes.
+Atmospheric $CO_{2}$ is the most important greenhouse gas (GHG) contributing to climate change. It increased by 40% from 278 ppm about 1750 to 390.5 ppm in 2011, which corresponds  to  a  mass  of  828  PgC. The carbon stored in vegetation living biomass amounts to 450 to 650 PgC and that in soils to 1500 to 2400 PgC, which makes it more than the atmospheric and vegetation carbon stocks combined (all numbers and fluxes from @ar5). This illustrates the immense role that soils play in the global carbon cycle. The main path by which carbon (in the form of $CO_{2}$) returns to the atmosphere is through soil respiration, which is 15 times higher than the $CO_{2}$ flux from burning fossil fuels for example. Together with gross primary production (GPP, carbon assimilation through photosynthesis) soil respiration determines the net flux of carbon between terrestrial ecosystems and the atmosphere. The effects of climate change on both processes is still highly debated. The classical view was that soil respiration is more sensitive to temperature than GPP, since temperature is its dominant limiting factor, while there are other factors limiting photosynthesis besides temperature. Under this assumption, the $CO_{2}$ release of soils to the atmosphere would exceed GPP in a warming global climate, resulting in a positive feedback loop to climate change (see @davidson2006). This assumption was implemented in most models that predict soil carbon turnover processes.
 
 One of these models is the Rothamsted turnover model (RothC, see @jenkinson1990 and @jenkinson1977). It is a multicompartment model that includes temperature and soil moisture (via precipitation and evaporation) as model inputs. In this report I want to perform a sensitivity analysis with regards to the model parameters and especially to the environmental inputs of the RothC model, to reveal how climate sensitivity is implemented in the model and make comparisons, with assumptions about the real sensitivities, possible.
 
@@ -23,7 +23,7 @@ One of these models is the Rothamsted turnover model (RothC, see @jenkinson1990 
 To perform the sensitivity analysis, I used climate data from Worldclim version 2.1 (@worldclim). These are monthly data averaged over the period of 1970-2000 in a spatial resolution of 2.5 minutes. To estimate possible future climate scenarios I also downloaded the future climate data set from Worldclim for the SSP scenario 5-8.5 and the period of 2081-2100. The data are CMIP6 downscaled future climate projections. To create a reference data set I extracted the data from the coordinates of Freiburg, Germany. For the future scenario I averaged the values of the available global climate models (see Appendix I).
 
 ## The RothC Model
-I performed the sensitivity analysis with *R* and *RStudio* (@rcore, @rstudio), using the packages *raster* and *sensitivity* for the analysis and data handlind respectively (see @sens and @raster). The RothC model is implemented in the *soilR* package (see @sierra2012). For detailed information about the model see @jenkinson1990 and @guide. I will briefly explain the different parameters and climate inputs. In the model the soil organic matter is divided into 4 active compartments and a fifth inactive compartment for inert organic matter (IOM). The four active compartments are decomposable plant material (DPM), resistant plant material (RPM), microbial biomass (BIO) and humified organic matter (HUM). Each compartment decomposes by a first-order process with its own characteristic rate. Incoming carbon in the form of litter is split into DPM and RPM, depending on a DPM/RPM ratio, that is a model parameter and representative of a certain site. Both DPM and RPM then decompose further to the same products: BIO, HUM and $CO_{2}$, which is lost to the system. BIO and HUM both decompose to form more $CO_2$ BIO and HUM, the ratio between $CO_{2}$ and BIO + HUM is defined by the clay content of the soil. Environmental influences are considered by multiplying the decomposition rates with a rate modifying factor for temperature and moisture, that are calculated using the monthly reference data for temperature and precipitation and evaporation respectively. I set the rest of the model parameters to the following default values, which, together with the environmental inputs from Table \ref{tab:env}, completes the parameter list:  
+I performed the sensitivity analysis with *R* and *R Studio* (@rcore, @rstudio), using the packages *raster* and *sensitivity* for the analysis and data handling respectively (see @sens and @raster). The RothC model is implemented in the *Soil R* package (see @sierra2012). For detailed information about the model see @jenkinson1990 and @guide. I will briefly explain the different parameters and climate inputs. In the model the soil organic matter is divided into 4 active compartments and a fifth inactive compartment for inert organic matter (IOM). The four active compartments are decomposable plant material (DPM), resistant plant material (RPM), microbial biomass (BIO) and humified organic matter (HUM). Each compartment decomposes by a first-order process with its own characteristic rate. Incoming carbon in the form of litter is split into DPM and RPM, depending on a DPM/RPM ratio, that is a model parameter and representative of a certain site. Both DPM and RPM then decompose further to the same products: BIO, HUM and $CO_{2}$, the latter of which is lost to the system. BIO and HUM both decompose to form more $CO_2$, BIO and HUM, the ratio between $CO_{2}$ and BIO + HUM is defined by the clay content of the soil. Environmental influences are considered by multiplying the decomposition rates with a rate modifying factor for temperature and moisture, that are calculated using the monthly reference data for temperature and precipitation and evaporation respectively. I set the rest of the model parameters to the following default values, which, together with the environmental inputs from Table \ref{tab:env}, completes the parameter list:  
 - Soil thickness: 25 cm  
 - IOM: 6.16 Mg/ha  
 - Clay content: 48%  
@@ -44,23 +44,41 @@ knitr::kable(x = rbind(Month = as.character(lubridate::month(1:12, label = TRUE)
 
 I ran the model for 400 years with this setup, to see when the carbon stocks would reach a stable state, which was after about 300 years. To calculate the sensitivity scores, I later ran the model for an additional 100 years after this spin up phase (see Appendix II).
 
-## Sensitivity Analysis and Morris Screening
+## Sensitivity Analysis with Morris Screening
 
-To asses the sensitivity of the model output in regards to the model parameters and the environmental inputs, I calculated the absolute change in model output in relation to the parameter change over a range of parameter values. Model output was the average total carbon of all five compartments during the last twelve months of a model run of 100 years (after spin up phase). The code for the sensitivity analysis is shown in Appendix III.
+To asses the sensitivity of the model output in regards to the model parameters and the environmental inputs, I calculated the absolute change in model output in relation to the parameter change over a range of parameter values. I differentiate between model parameters and inputs. When I talk about model inputs, I am explicitly talking about the environmental inputs,  that are listed in Table \ref{tab:env}, while model parameters refers to the rest of values, that the model needs to run. The model parameters I tested were decomposition rates k of the 4 active compartments, carbon input and clay content. The lower and upper limits of the parameter ranges were default value ± 50%. As model output served the average total carbon of all five compartments during the last twelve months of a model run of 100 years (after spin up phase). The code for the sensitivity analysis is shown in Appendix III.
 
-Because the model output does not depend on one value of the environmental inputs, but rather on twelve monthly values, it is not possible to define a range of values and calculate the corresponding sensitivity scores. To still be able to perform a sensitivity analysis for these inputs, I approached them slightly different. Instead of a range of parameter values I define a range of parameter value changes. These changes are then applied to the twelve data points and a model output with the new data can be produced. For the temperature, I set the parameter range from 0K to 8K. A parameter value of 1 does not mean that the input to the model is 1°C (which is impossible, because the model expects twelve inputs for the monthly temperatures), but rather that each monthly temperature value was increased by 1K from the default. For precipitation, two different approaches can be distinguished. In the first one the changes to the default values are applied to each month in the same way. Here I set the parameter range from -15mm to 15mm. This means a parameter value of 15 represents an increase of 15mm to the default monthly precipitation values, -10 a decrease of all twelve values by 10mm and so on. This is the same as for the temperature data. The second approach tries to replicate an assumed future precipitation scenario, where precipitation during the summer months decreases while it increases during the winter. For this approach the parameter ranges from 0mm to 15mm. A parameter value of 10 now means a decrease of the default precipitation data of 10mm for the summer months (may - september) and an increase of 10mm to the winter months. Basically the parameter range is then a severitiy measure of how pronounced this seasonal precipitation shift is (see funtion definition *update_extfx* in Appendix III).  
-The limits to the parameter changes have been determined by comparing the current climate with the future climate scenario, which is shown in figure \ref{fig:env_comp}. The maximal change in temperature of 8K, represents the largest difference between the current and future climate. For precipitation the deviation of the SSP 5-8.5 scenario from the current climate identifies the months may until september as months with decreased monthly precipitation, while rainfall is increased during the rest of the year. The maximal change of 15mm was determined by calculating 20% of the mean monthly precipitation of the current climate and was confirmed by the maximal deviations between the current and future climate.
-
+Environmental inputs temperature and precipitation had to be treated slightly different. Because the model output does not just depend on one value, but rather on twelve monthly values, it is not possible to define a range of values and calculate the corresponding sensitivity scores. To still be able to perform a sensitivity analysis for these inputs, instead of a range of input values, I defined a range of input value changes. These changes are then applied to the twelve data points and a model output with the new data can be produced. For the temperature, I set the input range from 0K to 2K. An input value of 1 does not mean that the input to the model is 1°C (which is impossible, because the model expects twelve inputs for the monthly temperatures), but rather that each monthly temperature value was increased by 1K from the default. For precipitation, the approach differs again, in order to replicate an assumed future precipitation scenario, where precipitation during the summer months decreases while it increases during the winter. For this approach the inputs range from 0mm to 15mm. An input value of 10 now means a decrease of the default precipitation data of 10mm for the summer months (May - September) and an increase of 10mm to the winter months. Basically the input range is then a severity measure of how pronounced this seasonal precipitation shift is (see function definition *update_extfx* in Appendix III).  
+The maximal changes in inputs of 2K and 15mm, were determined by calculating 20% of the mean monthly temperature and precipitation of the current climate. In figure \ref{fig:env_comp} I compared the current climate with the future climate scenario, to get an idea, whether the magnitude and quality of the changes are realistic. Concerning the quality of change for precipitation, figure \ref{fig:env_comp}b shows, that the deviation of the SSP 5-8.5 scenario from the current climate identifies the months May until September as months with decreased monthly precipitation, while rainfall is increased during the rest of the year.
 
 ![Comparison of current and future climate. The black line is the current climate (1970-2000), the red line future climate for SSP 5-8.5. \label{fig:env_comp}](figures/env_comp.png){width=100% height=100%}
 
 
 
-I also applied the method of Morris to asses sensitivity. This is done by so called 'one-factor-at-a-time' experiments, where, as the name suggests, the effect of one factor at a time is evaluated, on multiple trajectories through the k-dimensional factor space (k is the number of factors, whose effects on model output is tested). From all the trajectories a distribution of the elementary effect of the i-th factor, can be generated, which is called $F_i$. The distribution of the absolute elemantary effect is called $G_i$. From these distributions, two sensitivity measures can be derived: $\mu^*$ and $\sigma$. $\mu^*$ is the mean of distribution $G_I$ and $\sigma$ the standard deviation of $F_i$. $\mu^*$ is the measure of the overall importance of a factor on model output, while a large $\sigma$ can indicate a factors interaction with other factors or a non-linear effect on the output. This is a very short recapitulation of the method, for further informations see @morris1991 or @sierra2012. The method is implemented in the package *sensitivity*. To be able to run the *morris* function, some helper functions need to be defined. They are shwon in Appendix III and IV.
+I also applied the method of Morris to asses sensitivity. This is done by so called 'one-factor-at-a-time' experiments, where, as the name suggests, the effect of one factor at a time is evaluated, on multiple trajectories through the k-dimensional factor space (k is the number of factors, whose effects on model output is tested). From all the trajectories a distribution of the elementary effect of the i-th factor, can be generated, which is called $F_i$. The distribution of the absolute elementary effect is called $G_i$. From these distributions, two sensitivity measures can be derived: $\mu^*$ and $\sigma$. $\mu^*$ is the mean of distribution $G_I$ and $\sigma$ the standard deviation of $F_i$. $\mu^*$ is the measure of the overall importance of a factor on model output, while a large $\sigma$ can indicate a factors' interaction with other factors or a non-linear effect on the output. This is a very short recapitulation of the method, for further information see @morris1991 or @sierra2012. The method is implemented in the package *sensitivity*. To be able to run the *morris* function, some helper functions need to be defined. They are shown in Appendix III and IV.
 
 # Results
 
+In figure \ref{fig:morris} the two sensitivity measures of the Morris method are plotted against each other. Temperature has a bigger  and more linear effect on model output compared to precipitation (higher $mu^*$ and lower $\sigma$ values, see figure \ref{fig:morris}a). This is confirmed when looking at the sensitivity measures in figure \ref{fig:sens_in}, the sensitivity to model output decreases quite linearly for the temperature (figure \ref{fig:sens_in}b), while it is zero for the majority of the input range of precipitation and only increases towards the upper limit.
 
+Figure \ref{fig:morris}b shows the Morris measures for the model parameters. The parameter with the largest impact on model output is carbon input (In), closely followed by the decomposition rate of humified organic matter (k.HUM). Then there is a large gap to the rest of the parameters. Comparing the $\sigma$ values of the Morris screening the carbon input again differs from the rest. While all the parameters seem to follow roughly the same trend of increasing $\sigma$ with $mu^*$, the value for the carbon input lies underneath this imaginary line. To confirm this finding, we can have a look at figure \ref{fig:sens_parm}, where the sensitivity of the two most influential parameters (In and k.HUM), over their range of values, is displayed. The increase in carbon stocks is constant over the range of carbon inputs (figure,\ref{fig:sens_parm}a), which means that its sensitivity is constant (\ref{fig:sens_parm}b). The sensitivity of k.HUM, however clearly shows a non-linear trend (\ref{fig:sens_parm}d).
+
+![Morris screening. a = model inputs, b = model parameters. \label{fig:morris}](figures/morris.png)
+
+![Sensitivity over range of inputs. Top = temperature, bottom = precipitation, left = carbon stocks, right = sensitivity. \label{fig:sens_in}](figures/sens_inputs.png)
+
+![Sensitivity over range of parameters. Top = carbon Input, bottom = decomposition rate of HUM, left = carbon stocks, right = sensitivity. \label{fig:sens_parm}](figures/sens_parms.png)
+
+# Discussion
+
+The sensitivity of model output regarding precipitation can be explained by the rate modifying factor for moisture (b). This factor depends on the topsoil moisture deficit (TSMD), which is negative when the evaporation exceeds the precipitation. For the default values of precipitation this is not the case for any of the months, resulting in a b value of 1 for every month. Decomposition rates are hence not modified by it. Only with a negative TSMD the rate modifying factor drops below 1 and has an impact on the decomposition rate. So in order to get a negative TSMD precipitation has to fall beneath evaporation, which happens only in summer for larger changes. Remember the input values on the x-axis in figures \ref{fig:sens_in}c and d, represent increased precipitation in winter (which have no effect on b, since it is already at 1) and decreased precipitation in summer (which lowers b and therefore influences decomposition rates and in turn model output).
+
+# Conclusion
+
+In this analysis I have shown how the model parameters and environmental inputs influence the RothC model output in magnitude and quality. It is visible, in particular, how the model reacts to changes in temperature and that it follows the classical assumption that an increase in temperature leads to an increase in soil respiration, which results in lower soil carbon pools.
+
+
+\newpage
 # Appendix I: Climate data preparation
 ```{r, eval=FALSE}
 # read climate data
@@ -142,7 +160,7 @@ default_parms <- list(ks = c(k.DPM = 10, k.RPM = 0.3, k.BIO = 0.66,
 ```
 
 
-# Appendix III: helper functions for sensitivity measures and morris screening
+# Appendix III: helper functions for sensitivity measures and Morris screening
 ```{r, eval=FALSE}
 # return model output (average total C of last 12 months of model run)
 get_output <- function(model_parms = default_parms){
@@ -167,7 +185,8 @@ update_extfx <- function(par_value, par_name, env_data, time){
   }
   
   #  rate modifying factor for moisture 
-  moist_fact <- fW.RothC(P = env_data$prec, E = Evp$Evp, S.Thick = soil, pE = 1, bare = FALSE)[,2]
+  moist_fact <- fW.RothC(P = env_data$prec, E = Evp$Evp,
+                         S.Thick = soil, pE = 1, bare = FALSE)[,2]
   
   #  rate modifying factor for temperature
   temp_fact <- fT.RothC(env_data$temp)
@@ -193,7 +212,8 @@ change_parms <- function(par_value, par_name, env_data = data, par_list = defaul
     
   # changes in climate data input
   if(length(ind_env) != 0)
-    par_list[["xi"]] <- update_extfx(par_value, par_name, env_data = env_data, time = par_list[["t"]])
+    par_list[["xi"]] <- update_extfx(par_value, par_name,
+                                     env_data = env_data, time = par_list[["t"]])
   
   # changes in model parameter set
   if(length(c(ind_ks, ind_rest)) != 0){
@@ -225,7 +245,7 @@ morris_fun <- function(mt, par_name, par_list = default_parms){
 ```
 
 
-# Appendix IV: examples for sensitivity and morris screening
+# Appendix IV: examples for sensitivity and Morris screening
 
 ```{r, eval=FALSE}
 # sensitivity scores over a range of temperature changes
@@ -233,5 +253,18 @@ par_seq <- seq(0,2, length.out = 20)
 
 stocks <- sapply(par_seq, change_parms, par_name = "temp")
 sens <- sensitivity(stocks, par_seq, "abs")
+
+# morris scores for the model parameters
+names_pars <- c("k.DPM", "k.RPM", "k.BIO", "k.HUM", "In", "clay")
+lower <- c(5, 0.15, 0.33, 0.01, 1.35, 24)
+upper <- c(15, 0.45, 0.99, 0.03, 4.05, 72)
+
+morris_output_parameters <- morris(morris_fun, factors = names_pars, r = 20,
+                        design = list(type = "oat", levels = 8, grid.jump = 4),
+                        binf = lower, bsup = upper, par_name = names_pars)
 ```
+
+\newpage
+# References
+
 
